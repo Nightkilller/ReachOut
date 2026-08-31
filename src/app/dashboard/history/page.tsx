@@ -240,7 +240,7 @@ export default function CampaignsHistoryPage() {
   if (loading) {
     return (
       <div className="flex h-72 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-violet" />
+        <Loader2 className="h-8 w-8 animate-spin text-slate-800" />
       </div>
     );
   }
@@ -401,7 +401,7 @@ export default function CampaignsHistoryPage() {
                     onClick={() => setSelectedEmailId(item.id)}
                     className={`w-full text-left rounded-2xl p-4 transition-all flex flex-col space-y-2 border ${
                       isSelected
-                        ? "border-violet/60 bg-violet/10 shadow-md ring-2 ring-violet/20"
+                        ? "border-slate-800 bg-slate-100/70 shadow-sm ring-1 ring-slate-400/30"
                         : "border-border bg-card hover:border-violet/30 hover:bg-secondary/40 shadow-sm"
                     }`}
                   >
@@ -415,7 +415,7 @@ export default function CampaignsHistoryPage() {
                           {item.recipientCompany && (
                             <Badge
                               variant="outline"
-                              className="border-violet/30 bg-violet/10 text-violet text-[11px] font-bold px-2 py-0 shrink-0"
+                              className="border-violet/30 bg-violet/10 text-slate-800 text-[11px] font-bold px-2 py-0 shrink-0"
                             >
                               <Building2 className="mr-1 h-3 w-3" />
                               {item.recipientCompany}
@@ -454,7 +454,7 @@ export default function CampaignsHistoryPage() {
                             })}
                       </span>
                       {item.attachmentName && (
-                        <span className="flex items-center gap-1 text-[11px] text-violet font-semibold">
+                        <span className="flex items-center gap-1 text-[11px] text-slate-800 font-semibold">
                           <Paperclip className="h-3 w-3" /> Resume
                         </span>
                       )}
@@ -486,7 +486,7 @@ export default function CampaignsHistoryPage() {
                             {activeEmail.recipientCompany && (
                               <Badge
                                 variant="outline"
-                                className="border-violet/40 bg-violet/10 text-violet text-xs font-bold px-2.5 py-0.5"
+                                className="border-violet/40 bg-violet/10 text-slate-800 text-xs font-bold px-2.5 py-0.5"
                               >
                                 <Building2 className="mr-1 h-3.5 w-3.5" />
                                 {activeEmail.recipientCompany}
@@ -576,10 +576,10 @@ export default function CampaignsHistoryPage() {
                   {activeEmail.attachmentName && (
                     <div className="flex items-center justify-between rounded-2xl border border-border bg-secondary/40 p-3.5 shadow-sm">
                       <div className="flex items-center gap-2.5 text-sm font-bold text-foreground">
-                        <Paperclip className="h-4 w-4 text-violet" />
+                        <Paperclip className="h-4 w-4 text-slate-800" />
                         <span>Attachment: {activeEmail.attachmentName}</span>
                       </div>
-                      <Badge variant="outline" className="border-violet/30 bg-violet/10 text-violet text-xs font-semibold">
+                      <Badge variant="outline" className="border-violet/30 bg-violet/10 text-slate-800 text-xs font-semibold">
                         PDF (Delivered)
                       </Badge>
                     </div>

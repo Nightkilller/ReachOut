@@ -332,7 +332,7 @@ export function CalendarActivityDialog() {
                         <span
                           className={`text-xs font-bold ${
                             cell.isToday && !isSelected
-                              ? "flex h-5 w-5 items-center justify-center rounded-full bg-violet/20 text-violet font-bold"
+                              ? "flex h-5 w-5 items-center justify-center rounded-full bg-violet/20 text-slate-800 font-bold"
                               : ""
                           }`}
                         >
@@ -387,7 +387,7 @@ export function CalendarActivityDialog() {
                   <button
                     type="button"
                     onClick={() => setSelectedEmail(null)}
-                    className="flex items-center gap-1 text-xs text-violet hover:underline font-bold"
+                    className="flex items-center gap-1 text-xs text-slate-800 hover:underline font-bold"
                   >
                     <ChevronLeft className="h-4 w-4" /> Back to {formattedSelectedDate}
                   </button>
@@ -414,7 +414,7 @@ export function CalendarActivityDialog() {
                       {selectedEmail.recipient.company && (
                         <Badge
                           variant="outline"
-                          className="border-violet/30 bg-violet/10 text-violet text-xs font-bold"
+                          className="border-violet/30 bg-violet/10 text-slate-800 text-xs font-bold"
                         >
                           <Building2 className="mr-1 h-3 w-3" />
                           {selectedEmail.recipient.company}
@@ -460,7 +460,7 @@ export function CalendarActivityDialog() {
 
                   {selectedEmail.attachmentName && (
                     <div className="flex items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs text-foreground font-semibold">
-                      <Paperclip className="h-4 w-4 text-violet" />
+                      <Paperclip className="h-4 w-4 text-slate-800" />
                       Attachment: {selectedEmail.attachmentName}
                     </div>
                   )}
@@ -499,7 +499,7 @@ export function CalendarActivityDialog() {
                 <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 min-h-[280px]">
                   {loading ? (
                     <div className="flex h-56 items-center justify-center">
-                      <Loader2 className="h-6 w-6 animate-spin text-violet" />
+                      <Loader2 className="h-6 w-6 animate-spin text-slate-800" />
                     </div>
                   ) : dayEmails.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-56 text-center p-5 rounded-2xl border border-dashed border-border bg-card/40">
@@ -524,13 +524,13 @@ export function CalendarActivityDialog() {
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                              <p className="truncate text-xs font-bold text-foreground group-hover:text-violet">
+                              <p className="truncate text-xs font-bold text-foreground group-hover:text-slate-800">
                                 {email.recipient.name || email.recipient.email.split("@")[0]}
                               </p>
                               {email.recipient.company && (
                                 <Badge
                                   variant="outline"
-                                  className="border-violet/30 bg-violet/10 text-violet text-[10px] px-2 py-0 shrink-0 font-semibold"
+                                  className="border-violet/30 bg-violet/10 text-slate-800 text-[10px] px-2 py-0 shrink-0 font-semibold"
                                 >
                                   {email.recipient.company}
                                 </Badge>
@@ -553,7 +553,7 @@ export function CalendarActivityDialog() {
                                 Failed
                               </span>
                             )}
-                            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-violet ml-1 transition-transform group-hover:translate-x-1" />
+                            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-slate-800 ml-1 transition-transform group-hover:translate-x-1" />
                           </div>
                         </div>
 
@@ -573,7 +573,7 @@ export function CalendarActivityDialog() {
                                 })
                               : "Recently"}
                           </span>
-                          <span className="text-violet font-semibold group-hover:underline">
+                          <span className="text-slate-800 font-semibold group-hover:underline">
                             View message →
                           </span>
                         </div>

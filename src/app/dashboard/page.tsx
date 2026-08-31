@@ -162,7 +162,7 @@ export default async function DashboardPage() {
       <section className="surface overflow-hidden">
         <div className="flex items-center justify-between border-b border-border px-8 py-5">
           <div className="flex items-center gap-3">
-            <Mail className="h-5 w-5 text-violet" />
+            <Mail className="h-5 w-5 text-slate-800" />
             <h2 className="text-lg font-bold text-foreground">Recent Campaigns</h2>
           </div>
           <Link

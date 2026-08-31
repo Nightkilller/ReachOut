@@ -360,7 +360,7 @@ export default function RecipientsPage() {
                     </td>
                     <td className="px-6 py-4">
                       {r.company ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-xl bg-violet/10 border border-violet/20 px-3 py-1 text-sm text-violet font-bold">
+                        <span className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 border border-slate-200 px-3 py-1 text-sm text-slate-800 font-bold">
                           <Building2 className="h-3.5 w-3.5" />
                           {r.company}
                         </span>

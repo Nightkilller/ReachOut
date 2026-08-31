@@ -486,7 +486,7 @@ export default function ComposePage() {
                 <button
                   type="button"
                   onClick={selectAllAddressBook}
-                  className="flex items-center gap-1.5 text-sm text-violet hover:underline font-bold"
+                  className="flex items-center gap-1.5 text-sm text-slate-800 hover:underline font-bold"
                 >
                   <Users className="h-4 w-4" />
                   Select all ({addressBook.length})
@@ -504,7 +504,7 @@ export default function ComposePage() {
                   >
                     <span>{c}</span>
                     {comp && (
-                      <span className="rounded-lg bg-violet/20 text-violet px-2 py-0.5 text-xs font-bold">
+                      <span className="rounded-lg bg-violet/20 text-slate-800 px-2 py-0.5 text-xs font-bold">
                         {comp}
                       </span>
                     )}
@@ -540,8 +540,8 @@ export default function ComposePage() {
             {detectedCompany && (
               <div className="flex items-center gap-2 pt-1">
                 <span className="inline-flex items-center gap-2 rounded-full border border-violet/30 bg-violet/10 px-4 py-1.5 text-sm font-semibold text-foreground">
-                  <Building2 className="h-4 w-4 text-violet" />
-                  🏢 Target Company: <strong className="text-violet">{detectedCompany.company}</strong>
+                  <Building2 className="h-4 w-4 text-slate-800" />
+                  🏢 Target Company: <strong className="text-slate-800">{detectedCompany.company}</strong>
                 </span>
               </div>
             )}
@@ -552,7 +552,7 @@ export default function ComposePage() {
             <div className="flex items-center justify-between">
               <Label className="text-base font-bold">Subject Line</Label>
               {generatedEmails.length > 1 && (
-                <span className="text-xs text-violet font-semibold">
+                <span className="text-xs text-slate-800 font-semibold">
                   (Customized for: {generatedEmails[activePreviewIdx]?.company || "Selected recipient"})
                 </span>
               )}
@@ -647,9 +647,9 @@ export default function ComposePage() {
 
           {/* AI Settings Section (if AI Mode) — Placed just below body and attachment */}
           {activeMode === "ai" && (
-            <div className="space-y-5 rounded-3xl border border-violet/20 bg-violet/5 p-6 shadow-sm">
+            <div className="space-y-5 rounded-3xl border border-slate-200 bg-slate-50/70 p-6 shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-violet flex items-center gap-2">
+                <span className="text-sm font-bold text-slate-800 flex items-center gap-2">
                   <Sparkles className="h-4 w-4" /> AI Outreach Strategy
                 </span>
                 <span className="text-xs text-muted-foreground font-medium">Powered by Groq &amp; Gemini</span>
@@ -813,7 +813,7 @@ export default function ComposePage() {
               <p className="text-xs text-muted-foreground">What your recipient will see in Gmail</p>
             </div>
             {generatedEmails.length > 1 && (
-              <Badge variant="outline" className="border-violet/40 bg-violet/10 text-violet font-bold text-xs">
+              <Badge variant="outline" className="border-violet/40 bg-violet/10 text-slate-800 font-bold text-xs">
                 {activePreviewIdx + 1} of {generatedEmails.length} drafts
               </Badge>
             )}
@@ -879,7 +879,7 @@ export default function ComposePage() {
 
             {file && (
               <div className="inline-flex items-center gap-2.5 rounded-2xl border border-border bg-secondary/50 px-4 py-2.5 text-xs font-bold text-foreground shadow-sm">
-                <Paperclip className="h-4 w-4 text-violet" />
+                <Paperclip className="h-4 w-4 text-slate-800" />
                 <span>Attachment: {file.name}</span>
               </div>
             )}
