@@ -1,74 +1,45 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
   <defs>
     <!-- Background Gradient -->
-    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#181826"/>
-      <stop offset="50%" stop-color="#0F1019"/>
-      <stop offset="100%" stop-color="#090A0F"/>
+    <linearGradient id="logo-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6"/>
+      <stop offset="50%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
     </linearGradient>
 
-    <!-- Outer Border Gradient -->
-    <linearGradient id="border-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#8B5CF6" stop-opacity="0.6"/>
-      <stop offset="50%" stop-color="#6366F1" stop-opacity="0.2"/>
-      <stop offset="100%" stop-color="#3B82F6" stop-opacity="0.4"/>
-    </linearGradient>
-
-    <!-- Top Wing Gradient (Vibrant Violet to Cyan) -->
-    <linearGradient id="wing-top" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#7C3AED"/>
-      <stop offset="50%" stop-color="#8B5CF6"/>
-      <stop offset="100%" stop-color="#38BDF8"/>
-    </linearGradient>
-
-    <!-- Bottom Wing Gradient (Deep Indigo/Purple) -->
-    <linearGradient id="wing-bottom" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#4F46E5"/>
-      <stop offset="100%" stop-color="#312E81"/>
-    </linearGradient>
-
-    <!-- Center Fold Facet -->
-    <linearGradient id="wing-fold" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6366F1"/>
-      <stop offset="100%" stop-color="#4338CA"/>
-    </linearGradient>
-
-    <!-- Inner Core Trail Highlight -->
-    <linearGradient id="core-trail" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#C084FC"/>
-      <stop offset="100%" stop-color="#FFFFFF"/>
-    </linearGradient>
-
-    <!-- Ambient Glow Filter -->
-    <filter id="plane-glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#8B5CF6" flood-opacity="0.45"/>
-    </filter>
+    <!-- Subtle Inner Glow -->
+    <radialGradient id="logo-glow" cx="30%" cy="20%" r="80%">
+      <stop offset="0%" stop-color="#DDD6FE" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#4338CA" stop-opacity="0"/>
+    </radialGradient>
   </defs>
 
-  <!-- Obsidian Badge Container -->
-  <rect x="24" y="24" width="464" height="464" rx="120" fill="url(#bg-grad)"/>
-  <rect x="24" y="24" width="464" height="464" rx="120" stroke="url(#border-grad)" stroke-width="3"/>
+  <!-- Rounded Gradient App Badge -->
+  <rect width="120" height="120" rx="28" fill="url(#logo-bg)"/>
+  <rect width="120" height="120" rx="28" fill="url(#logo-glow)"/>
+  <rect width="120" height="120" rx="28" stroke="#FFFFFF" stroke-opacity="0.15" stroke-width="1"/>
 
-  <!-- Radial Glow Behind the Plane -->
-  <circle cx="280" cy="230" r="160" fill="#8B5CF6" opacity="0.12" filter="blur(40px)"/>
+  <!-- User's Curved Wings Geometric Logo Glyph -->
+  <!-- Upper-left curved wing -->
+  <path
+    d="M15 58
+       C25 44, 35 31, 43 22
+       C57 22, 70 21, 82 14
+       C74 29, 62 39, 49 46
+       C38 52, 26 56, 15 58
+       Z"
+    fill="#FFFFFF"
+  />
 
-  <!-- 3D Geometric Origami Send Plane -->
-  <g filter="url(#plane-glow)">
-    <!-- Bottom Underwing Shadow Facet -->
-    <polygon points="120,230 395,115 310,335 240,290" fill="url(#wing-bottom)"/>
-
-    <!-- Left Wing Main Facet -->
-    <polygon points="120,230 395,115 240,290 190,390" fill="url(#wing-top)"/>
-
-    <!-- Right Wing Main Facet -->
-    <polygon points="395,115 310,335 240,290" fill="url(#wing-fold)"/>
-
-    <!-- Center Spine Flight Path (Dynamic Lighting Line) -->
-    <line x1="120" y1="230" x2="395" y2="115" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
-    <line x1="240" y1="290" x2="395" y2="115" stroke="#E0E7FF" stroke-width="4" stroke-linecap="round" opacity="0.95"/>
-
-    <!-- Thrust Energy Spark / Dot -->
-    <circle cx="395" cy="115" r="7" fill="#FFFFFF"/>
-    <circle cx="395" cy="115" r="14" fill="#38BDF8" opacity="0.4"/>
-  </g>
+  <!-- Right/lower curved wing -->
+  <path
+    d="M82 14
+       C78 29, 77 42, 80 55
+       C82 66, 87 75, 94 83
+       L72 106
+       C69 91, 68 77, 69 63
+       C70 50, 75 36, 82 14
+       Z"
+    fill="#FFFFFF"
+  />
 </svg>

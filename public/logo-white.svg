@@ -1,10 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
-  <!-- Crisp Pure White ReachOut Send / Dart Glyph -->
-  <g stroke="#FFFFFF" stroke-width="52" stroke-linecap="round" stroke-linejoin="round" fill="none">
-    <!-- Left wing, apex point, right vertical edge, and bottom fold -->
-    <path d="M 215 270 L 95 215 L 385 95 L 385 415 L 300 325" />
-    
-    <!-- Central diagonal spine -->
-    <line x1="145" y1="395" x2="330" y2="185" />
-  </g>
+<svg
+  width="120"
+  height="120"
+  viewBox="0 0 120 120"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <!-- Upper-left curved wing -->
+  <path
+    d="M15 58
+       C25 44, 35 31, 43 22
+       C57 22, 70 21, 82 14
+       C74 29, 62 39, 49 46
+       C38 52, 26 56, 15 58
+       Z"
+    fill="#FFFFFF"
+  />
+
+  <!-- Right/lower curved wing -->
+  <path
+    d="M82 14
+       C78 29, 77 42, 80 55
+       C82 66, 87 75, 94 83
+       L72 106
+       C69 91, 68 77, 69 63
+       C70 50, 75 36, 82 14
+       Z"
+    fill="#FFFFFF"
+  />
 </svg>
