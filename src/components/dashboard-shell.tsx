@@ -17,6 +17,7 @@ import { useClerk } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import { UserNav } from "@/components/user-nav";
 import { CalendarActivityDialog } from "@/components/calendar-activity-dialog";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -164,6 +165,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             </span>
 
             <div className="ml-auto flex items-center gap-3">
+              {/* Theme Toggle (Light / Dark) */}
+              <ThemeToggle />
+
               {/* Outreach Activity Calendar Dialog */}
               <CalendarActivityDialog />
 

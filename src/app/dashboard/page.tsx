@@ -107,7 +107,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8 w-full">
       <PageHeader
-        title={<>Welcome back, {user?.name?.split(" ")[0] || "there"} 👋</>}
+        title={<>Welcome back, {user?.name?.split(" ")[0] || "there"}</>}
         description="Here's how your cold email outreach is performing today."
         action={
           <Button asChild className="gradient-accent text-primary-foreground shadow-lg hover:opacity-90 h-12 px-6 text-base font-bold rounded-2xl">

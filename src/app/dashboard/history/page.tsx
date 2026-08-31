@@ -360,7 +360,7 @@ export default function CampaignsHistoryPage() {
                       : "border border-violet/30 bg-violet/5 text-foreground hover:bg-violet/15"
                   }`}
                 >
-                  <span>🏢 {comp}</span>
+                  <span>{comp}</span>
                   <span className="text-[10px] opacity-75">
                     ({allEmailItems.filter((e) => e.recipientCompany === comp).length})
                   </span>

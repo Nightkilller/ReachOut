@@ -280,9 +280,9 @@ export default function RecipientsPage() {
                     className="h-12 text-base rounded-2xl"
                   />
                   {detectedCompany && (
-                    <p className="text-sm text-violet font-bold flex items-center gap-2 mt-2">
+                    <p className="text-sm text-slate-800 font-bold flex items-center gap-2 mt-2">
                       <Building2 className="h-4 w-4" />
-                      🏢 Detected: {detectedCompany}
+                      Detected: {detectedCompany}
                     </p>
                   )}
                 </div>

@@ -1,4 +1,3 @@
-import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Providers } from "@/components/providers";
 import { Toaster } from "@/components/ui/sonner";
@@ -16,14 +15,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
       <body className="min-h-full flex flex-col font-sans">
-        <ClerkProvider>
-          <Providers>
-            {children}
-            <Toaster position="bottom-right" richColors />
-          </Providers>
-        </ClerkProvider>
+        <Providers>
+          {children}
+          <Toaster position="bottom-right" richColors />
+        </Providers>
       </body>
     </html>
   );

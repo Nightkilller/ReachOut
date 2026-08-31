@@ -539,9 +539,9 @@ export default function ComposePage() {
 
             {detectedCompany && (
               <div className="flex items-center gap-2 pt-1">
-                <span className="inline-flex items-center gap-2 rounded-full border border-violet/30 bg-violet/10 px-4 py-1.5 text-sm font-semibold text-foreground">
+                <span className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/50 px-4 py-1.5 text-sm font-semibold text-foreground">
                   <Building2 className="h-4 w-4 text-slate-800" />
-                  🏢 Target Company: <strong className="text-slate-800">{detectedCompany.company}</strong>
+                  Target Company: <strong className="text-slate-800">{detectedCompany.company}</strong>
                 </span>
               </div>
             )}
@@ -660,10 +660,10 @@ export default function ComposePage() {
                 <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Goal</Label>
                 <div className="flex flex-wrap gap-2">
                   {[
-                    { id: "internship", label: "🎓 Internship" },
-                    { id: "fulltime", label: "💼 Full-Time" },
-                    { id: "networking", label: "☕ Coffee Chat" },
-                    { id: "sales", label: "🚀 Pitch" },
+                    { id: "internship", label: "Internship" },
+                    { id: "fulltime", label: "Full-Time" },
+                    { id: "networking", label: "Coffee Chat" },
+                    { id: "sales", label: "Pitch" },
                   ].map((item) => (
                     <button
                       key={item.id}
@@ -686,9 +686,9 @@ export default function ComposePage() {
                 <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tone</Label>
                 <div className="flex flex-wrap gap-2">
                   {[
-                    { id: "confident and concise", label: "⚡ Confident & Concise" },
-                    { id: "warm and enthusiastic", label: "🌟 Enthusiastic" },
-                    { id: "executive and direct", label: "👔 Executive" },
+                    { id: "confident and concise", label: "Confident & Concise" },
+                    { id: "warm and enthusiastic", label: "Enthusiastic" },
+                    { id: "executive and direct", label: "Executive" },
                   ].map((item) => (
                     <button
                       key={item.id}
@@ -839,7 +839,7 @@ export default function ComposePage() {
                         : "border border-border bg-card text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    🏢 {em.company || em.email.split("@")[0]}
+                    {em.company || em.email.split("@")[0]}
                   </button>
                 ))}
               </div>
