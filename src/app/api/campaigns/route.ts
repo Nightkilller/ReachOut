@@ -15,8 +15,9 @@ export async function GET() {
     where: { userId: user.id },
     orderBy: { createdAt: "desc" },
     include: {
-      _count: {
-        select: { emails: true },
+      emails: {
+        include: { recipient: true },
+        orderBy: { recipient: { email: "asc" } },
       },
     },
   });
