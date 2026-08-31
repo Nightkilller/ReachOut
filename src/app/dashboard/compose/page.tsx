@@ -19,6 +19,9 @@ import {
   Users,
   RefreshCw,
   Plus,
+  Mail,
+  UserCheck,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/dashboard-shell";
@@ -26,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { getCompanyFromEmail, inferNameFromEmail } from "@/lib/company-lookup";
 
@@ -45,6 +49,13 @@ interface GeneratedEmail {
   body: string;
 }
 
+interface UserProfile {
+  fullName: string | null;
+  currentRole: string | null;
+  targetRoles: string | null;
+  skills: string | null;
+}
+
 export function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
@@ -52,6 +63,9 @@ export function isValidEmail(value: string) {
 export default function ComposePage() {
   const [activeMode, setActiveMode] = useState<"ai" | "template">("ai");
   
+  // Profile
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
   // Recipients
   const [addressBook, setAddressBook] = useState<Recipient[]>([]);
   const [chips, setChips] = useState<string[]>([]);
@@ -93,13 +107,20 @@ export default function ComposePage() {
     safeLimit: number;
   } | null>(null);
 
-  // Load address book and daily limits
+  // Load initial data (profile, recipients, daily limits)
   const fetchInitialData = useCallback(async () => {
     try {
-      const [recRes, limitRes] = await Promise.all([
+      const [recRes, limitRes, profRes] = await Promise.all([
         fetch("/api/recipients"),
         fetch("/api/campaigns/limits"),
+        fetch("/api/profile"),
       ]);
+
+      let profData: UserProfile | null = null;
+      if (profRes.ok) {
+        profData = await profRes.json();
+        setProfile(profData);
+      }
 
       if (recRes.ok) {
         const data = await recRes.json();
@@ -113,8 +134,13 @@ export default function ComposePage() {
         const lData = await limitRes.json();
         setDailyLimits(lData);
       }
+
+      // Initial default subject line
+      const sender = profData?.fullName || "Aditya Gupta";
+      const targetRole = profData?.targetRoles || "Software Engineer Intern";
+      setSubject(`${sender} — ${targetRole} Inquiry`);
     } catch {
-      toast.error("Failed to load recipients");
+      toast.error("Failed to load initial settings");
     }
   }, []);
 
@@ -122,7 +148,7 @@ export default function ComposePage() {
     fetchInitialData();
   }, [fetchInitialData]);
 
-  // Detected company for the active chip
+  // Detected company for the first active chip
   const detectedCompany = useMemo(() => {
     const activeEmail = chips[0] || (isValidEmail(draftInput) ? draftInput : "");
     if (!activeEmail) return null;
@@ -232,14 +258,13 @@ export default function ComposePage() {
       });
 
       const data = await res.json();
-      if (res.ok && Array.isArray(data.emails)) {
+      if (res.ok && Array.isArray(data.emails) && data.emails.length > 0) {
         setGeneratedEmails(data.emails);
         setActivePreviewIdx(0);
-        if (data.emails[0]) {
-          setSubject(data.emails[0].subject);
-          setBody(data.emails[0].body);
-        }
-        toast.success(`Generated ${data.emails.length} personalized emails!`);
+        // Put the first email's tailored subject into the field
+        setSubject(data.emails[0].subject);
+        setBody(data.emails[0].body);
+        toast.success(`Generated ${data.emails.length} personalized emails with tailored subjects!`);
       } else {
         toast.error(data.error || "Failed to generate AI emails");
       }
@@ -250,6 +275,25 @@ export default function ComposePage() {
     }
   };
 
+  // Update active generated email content when editing
+  const handleSubjectChange = (val: string) => {
+    setSubject(val);
+    if (generatedEmails[activePreviewIdx]) {
+      setGeneratedEmails((prev) =>
+        prev.map((item, idx) => (idx === activePreviewIdx ? { ...item, subject: val } : item))
+      );
+    }
+  };
+
+  const handleBodyChange = (val: string) => {
+    setBody(val);
+    if (generatedEmails[activePreviewIdx]) {
+      setGeneratedEmails((prev) =>
+        prev.map((item, idx) => (idx === activePreviewIdx ? { ...item, body: val } : item))
+      );
+    }
+  };
+
   // Send Campaign
   const handleSend = async () => {
     if (chips.length === 0) {
@@ -257,8 +301,13 @@ export default function ComposePage() {
       return;
     }
 
-    if (activeMode === "template" && (!subject.trim() || !body.trim())) {
-      toast.error("Subject and body are required");
+    if (!subject.trim()) {
+      toast.error("Please enter a valid subject line");
+      return;
+    }
+
+    if (!body.trim()) {
+      toast.error("Please enter email body content");
       return;
     }
 
@@ -268,11 +317,14 @@ export default function ComposePage() {
       total: chips.length,
       sent: 0,
       failed: 0,
-      status: `Creating campaign (${delay}s gap)...`,
+      status: `Initializing campaign (${delay}s gap)...`,
     });
 
     try {
+      // 1. Ensure recipients exist in DB
       const recipientIds: string[] = [];
+      const recipientMap = new Map<string, string>(); // email -> recipientId
+
       for (const email of chips) {
         let existing = addressBook.find((r) => r.email.toLowerCase() === email.toLowerCase());
         if (!existing) {
@@ -291,20 +343,34 @@ export default function ComposePage() {
         }
         if (existing?.id) {
           recipientIds.push(existing.id);
+          recipientMap.set(email.toLowerCase(), existing.id);
         }
       }
 
+      // Map generated emails to recipientIds
+      const customEmails = generatedEmails.map((e) => {
+        const id = e.recipientId || recipientMap.get(e.email.toLowerCase());
+        return {
+          recipientId: id!,
+          subject: e.subject || subject,
+          body: e.body || body,
+        };
+      }).filter((e) => !!e.recipientId);
+
+      // Determine a clean, professional overall campaign subject title
+      const sender = profile?.fullName || "Aditya Gupta";
+      const targetRole = profile?.targetRoles || "Software Engineer";
+      const campaignTitle =
+        subject.trim() ||
+        `${sender} — ${targetRole} Outreach (${chips.length} recipient${chips.length > 1 ? "s" : ""})`;
+
       const payload = {
-        subject: subject || "Personal Outreach Campaign",
+        subject: campaignTitle,
         body: body || "Email content",
         recipientIds,
         attachmentPath: file?.path,
         attachmentName: file?.name,
-        customEmails: generatedEmails.map((e) => ({
-          recipientId: e.recipientId,
-          subject: e.subject,
-          body: e.body,
-        })),
+        customEmails,
       };
 
       const campRes = await fetch("/api/campaigns", {
@@ -320,7 +386,7 @@ export default function ComposePage() {
 
       const campaign = await campRes.json();
 
-      setSendProgress((p) => ({ ...p!, status: `Sending via Gmail SMTP (${delay}s gap)...` }));
+      setSendProgress((p) => ({ ...p!, status: `Sending emails via Gmail SMTP (${delay}s gap)...` }));
 
       const sendRes = await fetch(`/api/campaigns/${campaign.id}/send`, {
         method: "POST",
@@ -355,7 +421,7 @@ export default function ComposePage() {
           failed: result.failedCount,
           status: result.failedCount === 0 ? "All sent successfully!" : `Sent with ${result.failedCount} failure(s)`,
         });
-        toast.success(`🎉 Campaign sent successfully!`);
+        toast.success(`🎉 Outreach campaign sent successfully!`);
       } else {
         throw new Error(result.error || "Send failed");
       }
@@ -366,6 +432,8 @@ export default function ComposePage() {
       setSending(false);
     }
   };
+
+  const activeEmailForPreview = generatedEmails[activePreviewIdx];
 
   return (
     <div className="space-y-8 w-full">
@@ -473,7 +541,7 @@ export default function ComposePage() {
               <div className="flex items-center gap-2 pt-1">
                 <span className="inline-flex items-center gap-2 rounded-full border border-violet/30 bg-violet/10 px-4 py-1.5 text-sm font-semibold text-foreground">
                   <Building2 className="h-4 w-4 text-violet" />
-                  🏢 Detected: <strong className="text-violet">{detectedCompany.company}</strong>
+                  🏢 Target Company: <strong className="text-violet">{detectedCompany.company}</strong>
                 </span>
               </div>
             )}
@@ -481,12 +549,12 @@ export default function ComposePage() {
 
           {/* AI Settings Section (if AI Mode) */}
           {activeMode === "ai" && (
-            <div className="space-y-5 rounded-3xl border border-violet/20 bg-violet/5 p-5">
+            <div className="space-y-5 rounded-3xl border border-violet/20 bg-violet/5 p-6">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-bold text-violet flex items-center gap-2">
                   <Sparkles className="h-4 w-4" /> AI Outreach Strategy
                 </span>
-                <span className="text-xs text-muted-foreground font-medium">Powered by Groq &amp; Gemini</span>
+                <span className="text-xs text-muted-foreground font-medium">Powered by Groq (LLaMA 3.3 70B) &amp; Gemini</span>
               </div>
 
               {/* Goal Pills */}
@@ -547,30 +615,37 @@ export default function ComposePage() {
                   className="w-full gradient-accent text-primary-foreground shadow-lg hover:opacity-90 h-12 text-sm font-bold rounded-2xl"
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
-                  {generating ? "Drafting Tailored Emails with AI..." : `Generate AI Emails for ${chips.length} Recipient${chips.length !== 1 ? "s" : ""}`}
+                  {generating ? "Crafting Tailored Subjects & Body with AI..." : `Generate Personalized Emails for ${chips.length} Recipient${chips.length !== 1 ? "s" : ""}`}
                 </Button>
               </div>
             </div>
           )}
 
-          {/* Subject Field */}
+          {/* Subject Line Field */}
           <div className="space-y-2.5">
-            <Label className="text-base font-bold">Subject Line</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-base font-bold">Subject Line</Label>
+              {generatedEmails.length > 1 && (
+                <span className="text-xs text-violet font-semibold">
+                  (Customized for: {generatedEmails[activePreviewIdx]?.company || "Selected recipient"})
+                </span>
+              )}
+            </div>
             {generating ? (
               <div className="shimmer h-12 rounded-2xl" />
             ) : (
               <Input
                 value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="e.g. SDE Internship Inquiry — {{company}}"
-                className="bg-secondary/20 h-12 text-base rounded-2xl font-medium"
+                onChange={(e) => handleSubjectChange(e.target.value)}
+                placeholder="e.g. Aditya Gupta — SDE Internship Inquiry | TCS"
+                className="bg-secondary/20 h-12 text-base rounded-2xl font-semibold"
               />
             )}
           </div>
 
           {/* Body Field */}
           <div className="space-y-2.5">
-            <Label className="text-base font-bold">Email Body</Label>
+            <Label className="text-base font-bold">Email Message Body</Label>
             {generating ? (
               <div className="space-y-3 py-4">
                 {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -580,7 +655,7 @@ export default function ComposePage() {
             ) : (
               <Textarea
                 value={body}
-                onChange={(e) => setBody(e.target.value)}
+                onChange={(e) => handleBodyChange(e.target.value)}
                 rows={11}
                 placeholder="Write your email message..."
                 className="resize-none font-mono text-base leading-relaxed p-4 rounded-2xl"
@@ -713,8 +788,8 @@ export default function ComposePage() {
               <SendIcon className="mr-2.5 h-5 w-5" />
             )}
             {sending
-              ? "Sending Emails via Gmail SMTP..."
-              : `Send to ${chips.length} Recipient${chips.length !== 1 ? "s" : ""}`}
+              ? "Sending Individual Emails via Gmail SMTP..."
+              : `Send Personalized Emails to ${chips.length} Recipient${chips.length !== 1 ? "s" : ""}`}
           </Button>
 
           {sendProgress && (
@@ -731,71 +806,81 @@ export default function ComposePage() {
         {/* Right Column: Live Email Preview (5 cols) */}
         <div className="surface p-8 lg:col-span-5 h-fit lg:sticky lg:top-6 space-y-5">
           <div className="flex items-center justify-between border-b border-border pb-4">
-            <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-              Live Preview
-            </p>
+            <div>
+              <p className="text-sm font-bold uppercase tracking-wider text-foreground">
+                Live Email Preview
+              </p>
+              <p className="text-xs text-muted-foreground">What your recipient will see in Gmail</p>
+            </div>
             {generatedEmails.length > 1 && (
-              <span className="text-sm text-violet font-bold">
+              <Badge variant="outline" className="border-violet/40 bg-violet/10 text-violet font-bold text-xs">
                 {activePreviewIdx + 1} of {generatedEmails.length} drafts
-              </span>
+              </Badge>
             )}
           </div>
 
           {/* Carousel selector if multiple AI drafts */}
           {generatedEmails.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {generatedEmails.map((em, idx) => (
-                <button
-                  key={em.recipientId || idx}
-                  type="button"
-                  onClick={() => {
-                    setActivePreviewIdx(idx);
-                    setSubject(em.subject);
-                    setBody(em.body);
-                  }}
-                  className={`shrink-0 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
-                    activePreviewIdx === idx
-                      ? "gradient-accent text-primary-foreground shadow-sm"
-                      : "border border-border bg-secondary/50 text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {em.company || em.email.split("@")[0]}
-                </button>
-              ))}
+            <div className="space-y-2">
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Inspect &amp; Edit Recipient:</span>
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {generatedEmails.map((em, idx) => (
+                  <button
+                    key={em.recipientId || idx}
+                    type="button"
+                    onClick={() => {
+                      setActivePreviewIdx(idx);
+                      setSubject(em.subject);
+                      setBody(em.body);
+                    }}
+                    className={`shrink-0 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
+                      activePreviewIdx === idx
+                        ? "gradient-accent text-primary-foreground shadow-sm"
+                        : "border border-border bg-card text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    🏢 {em.company || em.email.split("@")[0]}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
           {/* Rendered Email Card */}
-          <div className="rounded-3xl border border-border bg-secondary/30 p-6 space-y-5">
+          <div className="rounded-3xl border border-border bg-card p-6 space-y-5 shadow-sm">
             <div className="flex items-center justify-between border-b border-border pb-4">
               <div className="flex items-center gap-3">
                 <span className="gradient-accent grid h-10 w-10 place-items-center rounded-2xl text-sm font-black text-primary-foreground">
-                  RO
+                  {profile?.fullName ? profile.fullName.slice(0, 2).toUpperCase() : "RO"}
                 </span>
                 <div className="text-sm">
-                  <p className="font-bold text-foreground">You (via ReachOut)</p>
-                  <p className="text-muted-foreground truncate max-w-[240px] text-xs">
-                    To: {chips.length ? chips.slice(0, 2).join(", ") + (chips.length > 2 ? ` +${chips.length - 2}` : "") : "recipient@company.com"}
+                  <p className="font-bold text-foreground">{profile?.fullName || "You"} (via Gmail)</p>
+                  <p className="text-muted-foreground truncate max-w-[240px] text-xs font-mono">
+                    To: {chips[activePreviewIdx] || chips[0] || "recipient@company.com"}
                   </p>
                 </div>
               </div>
-              <span className="text-xs text-muted-foreground font-medium">Now</span>
+              <span className="text-xs text-muted-foreground font-medium">Preview</span>
             </div>
 
             <div>
-              <h3 className="text-base font-bold text-foreground leading-snug">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Subject</p>
+              <h3 className="text-base font-bold text-foreground leading-snug mt-1">
                 {subject || <span className="text-muted-foreground font-normal">Subject line will appear here</span>}
               </h3>
             </div>
 
-            <div className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground max-h-96 overflow-y-auto">
-              {body || "Your personalized email body will appear here as you type or generate with AI."}
+            <div className="border-t border-border/60 pt-4">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Message</p>
+              <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground max-h-96 overflow-y-auto font-sans">
+                {body || "Your personalized email body will appear here as you type or generate with AI."}
+              </div>
             </div>
 
             {file && (
-              <div className="inline-flex items-center gap-2.5 rounded-2xl border border-border bg-card px-4 py-2.5 text-xs font-bold text-foreground shadow-sm">
+              <div className="inline-flex items-center gap-2.5 rounded-2xl border border-border bg-secondary/50 px-4 py-2.5 text-xs font-bold text-foreground shadow-sm">
                 <Paperclip className="h-4 w-4 text-violet" />
-                <span>{file.name}</span>
+                <span>Attachment: {file.name}</span>
               </div>
             )}
           </div>

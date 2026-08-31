@@ -50,82 +50,76 @@ export async function generateSingleEmail(
   const geminiApiKey = process.env.GEMINI_API_KEY;
   const company = recipient.company || "your team";
   const recipientName = recipient.name || "Hiring Team";
-  const senderName = profile.fullName || "Aditya";
+  const senderName = profile.fullName || "Aditya Gupta";
   const role = profile.currentRole || "Software Engineering Student";
   const skills = profile.skills || "Full Stack Development, React, Node.js, TypeScript, Python";
   const targetRoles = profile.targetRoles || "Software Engineer / Intern";
   const goal = options.goal || "internship";
   const tone = options.tone || "concise and confident";
 
-  const prompt = `You are an expert cold email copywriter who writes high-converting, personalized cold outreach emails that get replies from recruiters, founders, and hiring managers.
+  const prompt = `You are an elite cold email copywriter who writes high-converting, personalized cold outreach emails that get replies from recruiters, founders, and engineering managers.
 
-Task: Write a personalized, authentic, and compelling cold email from the sender to the recipient.
+Task: Write a personalized, highly authentic, and compelling cold outreach email from the sender to the recipient.
 
---- SENDER DETAILS ---
+--- SENDER PROFILE ---
 - Name: ${senderName}
 - Current Background: ${role}
 - Key Skills: ${skills}
-- Summary / Bio: ${profile.bio || "Passionate software builder looking to create high impact."}
+- Summary / Bio: ${profile.bio || "Passionate software builder dedicated to building scalable and robust web systems."}
 - Target Role: ${targetRoles}
 ${profile.portfolioUrl ? `- Portfolio: ${profile.portfolioUrl}` : ""}
 ${profile.linkedinUrl ? `- LinkedIn: ${profile.linkedinUrl}` : ""}
 ${profile.githubUrl ? `- GitHub: ${profile.githubUrl}` : ""}
 
---- RECIPIENT DETAILS ---
+--- RECIPIENT PROFILE ---
 - Name: ${recipientName}
 - Email: ${recipient.email}
 - Company: ${company}
 
 --- OUTREACH GOAL & TONE ---
-- Goal: ${goal} (e.g. seeking an internship/job role or building connection)
+- Goal: ${goal} (e.g. seeking an internship, full-time role, or coffee chat)
 - Tone: ${tone}
-- Additional User Notes / Instructions: ${options.customInstructions || "Tailor specifically to why I admire and want to contribute to " + company + "."}
+- User Instructions: ${options.customInstructions || "Highlight genuine interest in " + company + " and how my technical skillset directly adds value."}
 
---- RULES FOR COLD EMAIL ---
-1. Subject line: Short, engaging, personalized, no spam triggers (e.g., "${targetRoles} Opportunity at ${company} - ${senderName}").
+--- STRICT COPYWRITING RULES ---
+1. Subject line: MUST be clean, punchy, professional, and personalized with NO clickbait and NO spam words.
+   Examples of great subjects:
+   - "${senderName} — ${targetRoles} Inquiry | ${company}"
+   - "Exploring ${targetRoles} opportunities at ${company} — ${senderName}"
+   - "${senderName} / ${targetRoles} candidate for ${company}"
 2. Body:
-   - Hook: Personalized opening acknowledging ${company} and ${recipientName}.
-   - Value / Proof: Briefly mention 1-2 relevant technical strengths or projects and why they fit ${company}.
-   - Specificity: Reference something authentic about ${company}'s domain or engineering culture.
-   - Low-friction Call to Action (CTA): Ask for a brief 10-minute chat or guidance on next steps.
-   - Signoff: Professional closing from ${senderName} with relevant links if available.
-3. Keep it under 150-180 words. People are busy; make every word count.
-4. Return ONLY a valid JSON object in the exact schema below:
+   - Direct opening acknowledging ${recipientName} and why you are reaching out to ${company}.
+   - Brief 2-3 sentence value proposition highlighting relevant hands-on experience and projects in ${skills}.
+   - Clear reference to why ${company} stands out to you.
+   - Low-friction Call to Action (e.g. "Would you have 10 minutes for a brief chat this week, or could you point me to the right engineering lead?").
+   - Professional closing with ${senderName}.
+3. Keep the total length concise (120 to 160 words).
+4. Return ONLY a valid JSON object in the exact schema below with no extra markdown or explanations:
 
 {
   "subject": "string",
   "body": "string (with newline characters for paragraphs)"
 }`;
 
-  // Strategy 1: Use Groq if available (Super fast 120B reasoning model)
+  // Strategy 1: Use Groq if available (Fast 70B/120B model)
   if (groqApiKey) {
     try {
-      const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${groqApiKey}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "openai/gpt-oss-120b",
-          messages: [
-            {
-              role: "system",
-              content: "You are an expert cold email copywriter. You must output ONLY a valid JSON object with keys 'subject' and 'body'.",
-            },
-            {
-              role: "user",
-              content: prompt,
-            },
-          ],
-          response_format: { type: "json_object" },
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: prompt }],
           temperature: 0.7,
-          max_tokens: 1000,
+          response_format: { type: "json_object" },
         }),
       });
 
-      if (groqRes.ok) {
-        const data = await groqRes.json();
+      if (res.ok) {
+        const data = await res.json();
         const content = data.choices?.[0]?.message?.content;
         if (content) {
           const parsed = JSON.parse(content);
@@ -134,16 +128,13 @@ ${profile.githubUrl ? `- GitHub: ${profile.githubUrl}` : ""}
             email: recipient.email,
             company,
             recipientName,
-            subject: parsed.subject || `Inquiry regarding ${targetRoles} at ${company}`,
+            subject: parsed.subject || `${senderName} — ${targetRoles} Inquiry | ${company}`,
             body: parsed.body || "",
           };
         }
-      } else {
-        const errText = await groqRes.text();
-        console.error("[Groq API] Error:", errText);
       }
-    } catch (err) {
-      console.error("[Groq API] Execution error:", err);
+    } catch (error) {
+      console.error(`[Groq API] Error generating email for ${recipient.email}:`, error);
     }
   }
 
@@ -170,7 +161,7 @@ ${profile.githubUrl ? `- GitHub: ${profile.githubUrl}` : ""}
         email: recipient.email,
         company,
         recipientName,
-        subject: parsed.subject || `Inquiry regarding ${targetRoles} at ${company}`,
+        subject: parsed.subject || `${senderName} — ${targetRoles} Inquiry | ${company}`,
         body: parsed.body || "",
       };
     } catch (error) {
@@ -178,7 +169,7 @@ ${profile.githubUrl ? `- GitHub: ${profile.githubUrl}` : ""}
     }
   }
 
-  // Strategy 3: Intelligent fallback template
+  // Strategy 3: Intelligent high-converting fallback
   return generateFallbackEmail(recipient, profile, options);
 }
 
@@ -212,19 +203,13 @@ function generateFallbackEmail(
   options: GenerateOptions = {}
 ): GeneratedEmailResult {
   const company = recipient.company || "your team";
-  const recipientName = recipient.name || "Team";
-  const senderName = profile.fullName || "Aditya";
-  const role = profile.currentRole || "Software Engineering Student";
+  const recipientName = recipient.name || "Hiring Team";
+  const senderName = profile.fullName || "Aditya Gupta";
+  const role = profile.currentRole || "Full Stack Developer";
   const skills = profile.skills || "React, TypeScript, Node.js, and Python";
-  const targetRoles = profile.targetRoles || "Software Engineering Intern";
+  const targetRoles = profile.targetRoles || "Software Engineer Intern";
 
-  const subjects = [
-    `${targetRoles} inquiry — ${senderName} / ${company}`,
-    `Quick note from ${senderName} | ${targetRoles} @ ${company}`,
-    `Interest in Engineering opportunities at ${company}`,
-    `Excited about ${company} — ${targetRoles} inquiry`,
-  ];
-  const subject = subjects[Math.floor(Math.random() * subjects.length)];
+  const subject = `${senderName} — ${targetRoles} Inquiry | ${company}`;
 
   const links = [];
   if (profile.portfolioUrl) links.push(`Portfolio: ${profile.portfolioUrl}`);
@@ -234,15 +219,15 @@ function generateFallbackEmail(
 
   const body = `Hi ${recipientName},
 
-I hope you're doing well.
+I hope you're having a great week.
 
-I've been following ${company}'s work and really admire what your engineering team is building. I am a ${role} with strong hands-on experience in ${skills}.
+I've been following ${company}'s work and really admire what your engineering team is building. I am a ${role} with strong hands-on experience building scalable applications using ${skills}.
 
-I am actively looking for a ${targetRoles} role where I can contribute to building high-quality features and solving complex engineering challenges at ${company}.
+I am actively exploring ${targetRoles} opportunities where I can contribute to shipping reliable, high-impact features at ${company}.
 
-I have attached my resume for your review. Would you be open to a quick 10-minute conversation this week, or could you point me to the best person on the team to speak with?
+I have attached my resume for your review. Would you be open to a quick 10-minute conversation this week, or could you point me in the direction of the right engineering lead to speak with?
 
-Thanks for your time and consideration!
+Thank you for your time and consideration!
 
 Best regards,
 ${senderName}${linksText}`;
