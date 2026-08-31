@@ -1,0 +1,253 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+import Link from "next/link";
+import {
+  LayoutDashboard,
+  PenLine,
+  Users,
+  Send,
+  Settings as SettingsIcon,
+  LogOut,
+  Menu,
+  X,
+} from "lucide-react";
+import { useState, useEffect, type ReactNode } from "react";
+import { useClerk } from "@clerk/nextjs";
+import { cn } from "@/lib/utils";
+import { UserNav } from "@/components/user-nav";
+import { CalendarActivityDialog } from "@/components/calendar-activity-dialog";
+
+const NAV = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/compose", label: "Compose", icon: PenLine },
+  { href: "/dashboard/recipients", label: "Recipients", icon: Users },
+  { href: "/dashboard/history", label: "Campaigns", icon: Send },
+  { href: "/dashboard/settings", label: "Settings", icon: SettingsIcon },
+] as const;
+
+/** Broad, prominent dark icon rail (desktop) */
+function Rail() {
+  const pathname = usePathname();
+  const { signOut } = useClerk();
+
+  const isActive = (href: string) => {
+    if (href === "/dashboard") return pathname === "/dashboard";
+    return pathname.startsWith(href);
+  };
+
+  return (
+    <div className="flex h-full w-[84px] flex-col items-center gap-3 rounded-[2rem] bg-sidebar/95 py-6 text-sidebar-foreground shadow-[0_20px_50px_-20px_oklch(0.2_0.02_265/45%)] backdrop-blur-xl">
+      {/* ReachOut Logo icon */}
+      <Link
+        href="/dashboard"
+        className="mb-5 grid h-12 w-12 place-items-center rounded-2xl transition-transform hover:scale-105"
+        title="ReachOut"
+      >
+        <img src="/logo.svg" alt="ReachOut" className="h-12 w-12 rounded-2xl shadow-[0_8px_18px_-6px_oklch(0.62_0.176_254/55%)]" />
+      </Link>
+
+      <nav className="flex flex-1 flex-col items-center gap-3">
+        {NAV.map(({ href, label, icon: Icon }) => {
+          const active = isActive(href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              title={label}
+              aria-label={label}
+              className={cn(
+                "relative grid h-12 w-12 place-items-center rounded-2xl transition-all duration-200",
+                active
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_0_1px_0_0_oklch(1_0_0/12%),0_0_24px_-4px_oklch(0.62_0.176_254/45%)]"
+                  : "text-sidebar-foreground/55 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+              )}
+            >
+              {active && (
+                <span className="absolute -left-[18px] h-7 w-[4px] rounded-full bg-sidebar-primary" />
+              )}
+              <Icon className="h-5 w-5" />
+            </Link>
+          );
+        })}
+      </nav>
+
+      <button
+        aria-label="Sign out"
+        title="Sign out"
+        onClick={() => signOut({ redirectUrl: "/" })}
+        className="grid h-12 w-12 place-items-center rounded-2xl text-sidebar-foreground/55 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+      >
+        <LogOut className="h-5 w-5" />
+      </button>
+    </div>
+  );
+}
+
+/** Full labelled sidebar for the mobile drawer */
+function MobileNav({ onNavigate }: { onNavigate: () => void }) {
+  const pathname = usePathname();
+  const { signOut } = useClerk();
+
+  const isActive = (href: string) => {
+    if (href === "/dashboard") return pathname === "/dashboard";
+    return pathname.startsWith(href);
+  };
+
+  return (
+    <div className="flex h-full flex-col gap-6 bg-sidebar p-6 text-sidebar-foreground">
+      <div className="flex items-center gap-3">
+        <img src="/logo.svg" alt="ReachOut" className="h-10 w-10 rounded-xl" />
+        <span className="text-xl font-bold tracking-tight">
+          Reach<span className="gradient-text">Out</span>
+        </span>
+      </div>
+
+      <nav className="flex flex-1 flex-col gap-1.5">
+        {NAV.map(({ href, label, icon: Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            onClick={onNavigate}
+            className={cn(
+              "flex items-center gap-3.5 rounded-2xl px-4 py-3 text-base font-medium transition-colors",
+              isActive(href)
+                ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm"
+                : "text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+            )}
+          >
+            <Icon className="h-5 w-5 shrink-0" />
+            <span className="truncate">{label}</span>
+          </Link>
+        ))}
+      </nav>
+
+      <button
+        onClick={() => signOut({ redirectUrl: "/" })}
+        className="flex items-center gap-3.5 rounded-2xl px-4 py-3 text-base font-medium text-destructive hover:bg-destructive/10"
+      >
+        <LogOut className="h-5 w-5" /> Sign out
+      </button>
+    </div>
+  );
+}
+
+export function DashboardShell({ children }: { children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  return (
+    <div className="min-h-screen w-full p-2 sm:p-4 lg:p-6 flex flex-col">
+      <div className="flex w-full flex-1 gap-5">
+        {/* Desktop Rail Sidebar */}
+        <aside className="sticky top-6 hidden h-[calc(100vh-3rem)] shrink-0 lg:block">
+          <Rail />
+        </aside>
+
+        {/* Full-width Canvas Container */}
+        <div className="canvas min-w-0 flex-1 rounded-2xl sm:rounded-[2rem] flex flex-col min-h-[calc(100vh-3rem)]">
+          <header className="flex items-center gap-3 px-6 pt-6 sm:px-10 sm:pt-8">
+            <button
+              aria-label="Open menu"
+              onClick={() => setOpen(true)}
+              className="grid h-11 w-11 place-items-center rounded-xl border border-border lg:hidden"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <span className="flex items-center gap-2.5 text-lg font-bold lg:hidden">
+              <img src="/logo.svg" alt="ReachOut" className="h-7 w-7 rounded-lg" />
+              Reach<span className="gradient-text">Out</span>
+            </span>
+
+            <div className="ml-auto flex items-center gap-3">
+              {/* Outreach Activity Calendar Dialog */}
+              <CalendarActivityDialog />
+
+              {/* User Profile Pill */}
+              <UserNav />
+            </div>
+          </header>
+
+          <main key={pathname} className="animate-fade-up flex-1 px-6 pb-12 pt-8 sm:px-10">
+            {children}
+          </main>
+        </div>
+      </div>
+
+      {/* Mobile Drawer */}
+      {open && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div
+            className="absolute inset-0 bg-foreground/30 backdrop-blur-sm"
+            onClick={() => setOpen(false)}
+          />
+          <div className="absolute inset-y-0 left-0 w-72 animate-fade-up">
+            <button
+              aria-label="Close menu"
+              onClick={() => setOpen(false)}
+              className="absolute right-3 top-4 z-10 grid h-9 w-9 place-items-center rounded-lg text-sidebar-foreground/70"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <MobileNav onNavigate={() => setOpen(false)} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function PageHeader({
+  title,
+  description,
+  action,
+}: {
+  title: ReactNode;
+  description?: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h1 className="gradient-text text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl lg:text-[40px]">
+          {title}
+        </h1>
+        {description && (
+          <p className="mt-2 text-base text-muted-foreground sm:text-lg">
+            {description}
+          </p>
+        )}
+      </div>
+      {action && <div className="shrink-0">{action}</div>}
+    </div>
+  );
+}
+
+export function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, string> = {
+    sent: "bg-success/15 text-success border-success/25",
+    completed: "bg-success/15 text-success border-success/25",
+    delivered: "bg-success/15 text-success border-success/25",
+    opened: "bg-[var(--tint-sky)] text-foreground border-transparent",
+    draft: "bg-secondary text-muted-foreground border-border",
+    sending: "bg-[var(--tint-sky)] text-violet border-violet/30",
+    failed: "bg-destructive/10 text-destructive border-destructive/25",
+    bounced: "bg-destructive/10 text-destructive border-destructive/25",
+    pending: "bg-secondary text-muted-foreground border-border",
+  };
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold capitalize",
+        map[status.toLowerCase()] ?? map["draft"],
+      )}
+    >
+      {status}
+    </span>
+  );
+}

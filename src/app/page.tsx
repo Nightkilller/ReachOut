@@ -1,65 +1,78 @@
-import Image from "next/image";
+import { redirect } from "next/navigation";
+import { currentUser } from "@clerk/nextjs/server";
+import { SignInButton } from "@/components/sign-in-button";
+import { Sparkles, Shield, Zap, Users, Send } from "lucide-react";
 
-export default function Home() {
+export default async function HomePage() {
+  const user = await currentUser();
+
+  // If already signed in, redirect to dashboard
+  if (user) {
+    redirect("/dashboard");
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="relative flex min-h-screen flex-col items-center justify-center p-4 sm:p-8">
+      <div className="surface animate-fade-up relative z-10 flex max-w-2xl flex-col items-center p-8 sm:p-12 text-center shadow-xl">
+        {/* Logo */}
+        <div className="mb-6 flex items-center gap-3">
+          <img src="/logo.svg" alt="ReachOut" className="h-14 w-14 rounded-2xl shadow-[0_8px_20px_-6px_oklch(0.62_0.176_254/55%)]" />
+          <h1 className="text-4xl font-bold tracking-tight">
+            <span className="text-foreground">Reach</span>
+            <span className="gradient-text">Out</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Tagline */}
+        <p className="mb-2 text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+          Smart outreach, simplified.
+        </p>
+        <p className="mb-8 max-w-md text-sm text-muted-foreground leading-relaxed sm:text-base">
+          Send AI-personalized outreach emails with your resume attached — tailored individually per company domain — straight from your Gmail.
+        </p>
+
+        {/* Sign in button */}
+        <div className="w-full max-w-xs">
+          <SignInButton />
         </div>
-      </main>
-    </div>
+
+        <p className="mt-3 text-xs text-muted-foreground">
+          Sign in with email or Google. Fast &amp; encrypted.
+        </p>
+
+        {/* Feature cards */}
+        <div className="mt-10 grid w-full grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="tint-sky gradient-ring rounded-2xl p-4 text-left shadow-sm">
+            <div className="mb-2 grid h-8 w-8 place-items-center rounded-xl bg-card text-foreground shadow-sm">
+              <Sparkles className="h-4 w-4 text-violet" />
+            </div>
+            <h2 className="text-xs font-bold text-foreground">AI Per Company</h2>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Auto-detects company domain and crafts unique emails
+            </p>
+          </div>
+
+          <div className="tint-mint gradient-ring rounded-2xl p-4 text-left shadow-sm">
+            <div className="mb-2 grid h-8 w-8 place-items-center rounded-xl bg-card text-foreground shadow-sm">
+              <Zap className="h-4 w-4 text-success" />
+            </div>
+            <h2 className="text-xs font-bold text-foreground">Anti-Penalty Sending</h2>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Configurable send throttling &amp; daily safety quotas
+            </p>
+          </div>
+
+          <div className="tint-lilac gradient-ring rounded-2xl p-4 text-left shadow-sm">
+            <div className="mb-2 grid h-8 w-8 place-items-center rounded-xl bg-card text-foreground shadow-sm">
+              <Shield className="h-4 w-4 text-violet" />
+            </div>
+            <h2 className="text-xs font-bold text-foreground">AES Encrypted</h2>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Gmail App Passwords encrypted at rest
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
   );
 }

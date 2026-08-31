@@ -1,0 +1,806 @@
+"use client";
+
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import {
+  Sparkles,
+  X,
+  Paperclip,
+  Send as SendIcon,
+  Building2,
+  Loader2,
+  Clock,
+  Shield,
+  Zap,
+  Turtle,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  FileText,
+  Users,
+  RefreshCw,
+  Plus,
+} from "lucide-react";
+import { toast } from "sonner";
+import { PageHeader } from "@/components/dashboard-shell";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
+import { getCompanyFromEmail, inferNameFromEmail } from "@/lib/company-lookup";
+
+interface Recipient {
+  id: string;
+  email: string;
+  name: string | null;
+  company: string | null;
+}
+
+interface GeneratedEmail {
+  recipientId: string;
+  email: string;
+  company: string;
+  recipientName: string;
+  subject: string;
+  body: string;
+}
+
+export function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
+export default function ComposePage() {
+  const [activeMode, setActiveMode] = useState<"ai" | "template">("ai");
+  
+  // Recipients
+  const [addressBook, setAddressBook] = useState<Recipient[]>([]);
+  const [chips, setChips] = useState<string[]>([]);
+  const [draftInput, setDraftInput] = useState("");
+  
+  // Form fields
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  
+  // AI options
+  const [goal, setGoal] = useState("internship");
+  const [tone, setTone] = useState("confident and concise");
+  const [customInstructions, setCustomInstructions] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [generatedEmails, setGeneratedEmails] = useState<GeneratedEmail[]>([]);
+  const [activePreviewIdx, setActivePreviewIdx] = useState(0);
+
+  // Resume PDF Attachment
+  const [file, setFile] = useState<{ name: string; path: string } | null>(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Send speed / throttling
+  const [sendSpeed, setSendSpeed] = useState<"fast" | "safe" | "stealth" | "custom">("safe");
+  const [customDelay, setCustomDelay] = useState(45);
+  const [sending, setSending] = useState(false);
+  const [sendProgress, setSendProgress] = useState<{
+    total: number;
+    sent: number;
+    failed: number;
+    status: string;
+  } | null>(null);
+
+  // Daily limits
+  const [dailyLimits, setDailyLimits] = useState<{
+    sentToday: number;
+    remaining: number;
+    safeLimit: number;
+  } | null>(null);
+
+  // Load address book and daily limits
+  const fetchInitialData = useCallback(async () => {
+    try {
+      const [recRes, limitRes] = await Promise.all([
+        fetch("/api/recipients"),
+        fetch("/api/campaigns/limits"),
+      ]);
+
+      if (recRes.ok) {
+        const data = await recRes.json();
+        setAddressBook(data);
+        if (data.length > 0 && chips.length === 0) {
+          setChips(data.slice(0, 3).map((r: Recipient) => r.email));
+        }
+      }
+
+      if (limitRes.ok) {
+        const lData = await limitRes.json();
+        setDailyLimits(lData);
+      }
+    } catch {
+      toast.error("Failed to load recipients");
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchInitialData();
+  }, [fetchInitialData]);
+
+  // Detected company for the active chip
+  const detectedCompany = useMemo(() => {
+    const activeEmail = chips[0] || (isValidEmail(draftInput) ? draftInput : "");
+    if (!activeEmail) return null;
+    const company = getCompanyFromEmail(activeEmail);
+    return company ? { company, email: activeEmail } : null;
+  }, [chips, draftInput]);
+
+  // Delay seconds calculation
+  const getDelaySeconds = () => {
+    switch (sendSpeed) {
+      case "fast": return 15;
+      case "safe": return 30;
+      case "stealth": return 60;
+      case "custom": return customDelay;
+    }
+  };
+
+  const getEstimatedTime = (count: number) => {
+    const totalSecs = count * getDelaySeconds();
+    if (totalSecs < 60) return `~${totalSecs}s`;
+    const mins = Math.ceil(totalSecs / 60);
+    return `~${mins} min${mins > 1 ? "s" : ""}`;
+  };
+
+  // Add email chip
+  const addChip = (value: string) => {
+    const v = value.trim().replace(/,$/, "");
+    if (!v) return;
+    if (!isValidEmail(v)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    if (chips.includes(v)) return;
+    setChips((prev) => [...prev, v]);
+    setDraftInput("");
+  };
+
+  const removeChip = (val: string) => {
+    setChips((prev) => prev.filter((c) => c !== val));
+  };
+
+  const selectAllAddressBook = () => {
+    const allEmails = addressBook.map((r) => r.email);
+    setChips(Array.from(new Set([...chips, ...allEmails])));
+    toast.success(`Selected ${allEmails.length} recipients from address book`);
+  };
+
+  // File upload handler
+  const handleFileUpload = async (uploaded: File) => {
+    if (uploaded.type !== "application/pdf") {
+      toast.error("Only PDF files are allowed");
+      return;
+    }
+    if (uploaded.size > 5 * 1024 * 1024) {
+      toast.error("File size must be under 5MB");
+      return;
+    }
+
+    setUploadingFile(true);
+    const formData = new FormData();
+    formData.append("file", uploaded);
+
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      if (res.ok) {
+        setFile({ name: data.name, path: data.path });
+        toast.success(`Attached resume: ${data.name}`);
+      } else {
+        toast.error(data.error || "Upload failed");
+      }
+    } catch {
+      toast.error("Upload failed");
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  // AI Generation
+  const handleGenerateAI = async () => {
+    if (chips.length === 0) {
+      toast.error("Add at least one recipient email to generate");
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      const directRecipients = chips.map((email) => {
+        const found = addressBook.find((r) => r.email.toLowerCase() === email.toLowerCase());
+        return {
+          id: found?.id,
+          email,
+          name: found?.name || inferNameFromEmail(email),
+          company: found?.company || getCompanyFromEmail(email),
+        };
+      });
+
+      const res = await fetch("/api/generate-emails", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipients: directRecipients,
+          goal,
+          tone,
+          customInstructions,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.emails)) {
+        setGeneratedEmails(data.emails);
+        setActivePreviewIdx(0);
+        if (data.emails[0]) {
+          setSubject(data.emails[0].subject);
+          setBody(data.emails[0].body);
+        }
+        toast.success(`Generated ${data.emails.length} personalized emails!`);
+      } else {
+        toast.error(data.error || "Failed to generate AI emails");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Generation failed");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  // Send Campaign
+  const handleSend = async () => {
+    if (chips.length === 0) {
+      toast.error("Add at least one recipient");
+      return;
+    }
+
+    if (activeMode === "template" && (!subject.trim() || !body.trim())) {
+      toast.error("Subject and body are required");
+      return;
+    }
+
+    setSending(true);
+    const delay = getDelaySeconds();
+    setSendProgress({
+      total: chips.length,
+      sent: 0,
+      failed: 0,
+      status: `Creating campaign (${delay}s gap)...`,
+    });
+
+    try {
+      const recipientIds: string[] = [];
+      for (const email of chips) {
+        let existing = addressBook.find((r) => r.email.toLowerCase() === email.toLowerCase());
+        if (!existing) {
+          const createRes = await fetch("/api/recipients", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email,
+              name: inferNameFromEmail(email),
+              company: getCompanyFromEmail(email),
+            }),
+          });
+          if (createRes.ok) {
+            existing = await createRes.json();
+          }
+        }
+        if (existing?.id) {
+          recipientIds.push(existing.id);
+        }
+      }
+
+      const payload = {
+        subject: subject || "Personal Outreach Campaign",
+        body: body || "Email content",
+        recipientIds,
+        attachmentPath: file?.path,
+        attachmentName: file?.name,
+        customEmails: generatedEmails.map((e) => ({
+          recipientId: e.recipientId,
+          subject: e.subject,
+          body: e.body,
+        })),
+      };
+
+      const campRes = await fetch("/api/campaigns", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!campRes.ok) {
+        const err = await campRes.json();
+        throw new Error(err.error || "Failed to create campaign");
+      }
+
+      const campaign = await campRes.json();
+
+      setSendProgress((p) => ({ ...p!, status: `Sending via Gmail SMTP (${delay}s gap)...` }));
+
+      const sendRes = await fetch(`/api/campaigns/${campaign.id}/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ delaySeconds: delay }),
+      });
+
+      const result = await sendRes.json();
+
+      if (sendRes.status === 429 && result.requiresConfirmation) {
+        const proceed = window.confirm(`${result.error}\n\nDo you want to send anyway?`);
+        if (proceed) {
+          const retryRes = await fetch(`/api/campaigns/${campaign.id}/send`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ delaySeconds: delay, skipLimitCheck: true }),
+          });
+          const retryResult = await retryRes.json();
+          if (!retryRes.ok) throw new Error(retryResult.error || "Send failed");
+          Object.assign(result, retryResult);
+        } else {
+          setSending(false);
+          setSendProgress(null);
+          return;
+        }
+      }
+
+      if (sendRes.ok) {
+        setSendProgress({
+          total: result.totalCount,
+          sent: result.sentCount,
+          failed: result.failedCount,
+          status: result.failedCount === 0 ? "All sent successfully!" : `Sent with ${result.failedCount} failure(s)`,
+        });
+        toast.success(`🎉 Campaign sent successfully!`);
+      } else {
+        throw new Error(result.error || "Send failed");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to send campaign");
+      setSendProgress(null);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="space-y-8 w-full">
+      <PageHeader
+        title="Compose Outreach"
+        description="Write it once, let AI personalize it uniquely per company domain."
+      />
+
+      <div className="grid gap-8 lg:grid-cols-12 w-full">
+        {/* Left Column: Form Controls (7 cols) */}
+        <div className="surface space-y-6 p-8 lg:col-span-7">
+          {/* Mode Switcher Pills */}
+          <div className="flex items-center justify-between border-b border-border pb-5">
+            <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+              Campaign Mode
+            </Label>
+            <div className="flex rounded-2xl bg-secondary/80 p-1.5 border border-border">
+              <button
+                type="button"
+                onClick={() => setActiveMode("ai")}
+                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all ${
+                  activeMode === "ai"
+                    ? "gradient-accent text-primary-foreground shadow-md"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Sparkles className="h-4 w-4" />
+                AI Smart Outreach
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveMode("template")}
+                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all ${
+                  activeMode === "template"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <FileText className="h-4 w-4" />
+                Standard Template
+              </button>
+            </div>
+          </div>
+
+          {/* "To" Recipient Field */}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <Label className="text-base font-bold">To (Recipients)</Label>
+              {addressBook.length > 0 && (
+                <button
+                  type="button"
+                  onClick={selectAllAddressBook}
+                  className="flex items-center gap-1.5 text-sm text-violet hover:underline font-bold"
+                >
+                  <Users className="h-4 w-4" />
+                  Select all ({addressBook.length})
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-input bg-secondary/30 p-2.5 min-h-[56px]">
+              {chips.map((c) => {
+                const comp = getCompanyFromEmail(c);
+                return (
+                  <span
+                    key={c}
+                    className="inline-flex items-center gap-2 rounded-xl bg-primary/10 border border-primary/20 px-3 py-1.5 text-sm font-semibold text-foreground"
+                  >
+                    <span>{c}</span>
+                    {comp && (
+                      <span className="rounded-lg bg-violet/20 text-violet px-2 py-0.5 text-xs font-bold">
+                        {comp}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      aria-label={`Remove ${c}`}
+                      onClick={() => removeChip(c)}
+                      className="hover:text-destructive transition-colors ml-1"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </span>
+                );
+              })}
+              <input
+                value={draftInput}
+                onChange={(e) => setDraftInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === "," || e.key === " ") {
+                    e.preventDefault();
+                    addChip(draftInput);
+                  }
+                  if (e.key === "Backspace" && !draftInput) {
+                    setChips((p) => p.slice(0, -1));
+                  }
+                }}
+                onBlur={() => draftInput && addChip(draftInput)}
+                placeholder={chips.length === 0 ? "Paste hr@tcs.com, recruiter@google.com..." : "Add more..."}
+                className="min-w-[200px] flex-1 bg-transparent px-2 py-1.5 text-base outline-none placeholder:text-muted-foreground"
+              />
+            </div>
+
+            {detectedCompany && (
+              <div className="flex items-center gap-2 pt-1">
+                <span className="inline-flex items-center gap-2 rounded-full border border-violet/30 bg-violet/10 px-4 py-1.5 text-sm font-semibold text-foreground">
+                  <Building2 className="h-4 w-4 text-violet" />
+                  🏢 Detected: <strong className="text-violet">{detectedCompany.company}</strong>
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* AI Settings Section (if AI Mode) */}
+          {activeMode === "ai" && (
+            <div className="space-y-5 rounded-3xl border border-violet/20 bg-violet/5 p-5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold text-violet flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" /> AI Outreach Strategy
+                </span>
+                <span className="text-xs text-muted-foreground font-medium">Powered by Groq &amp; Gemini</span>
+              </div>
+
+              {/* Goal Pills */}
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Goal</Label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: "internship", label: "🎓 Internship" },
+                    { id: "fulltime", label: "💼 Full-Time" },
+                    { id: "networking", label: "☕ Coffee Chat" },
+                    { id: "sales", label: "🚀 Pitch" },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setGoal(item.id)}
+                      className={`rounded-xl px-3.5 py-1.5 text-sm font-bold transition-all ${
+                        goal === item.id
+                          ? "gradient-accent text-primary-foreground shadow-sm"
+                          : "border border-border bg-card text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tone Pills */}
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tone</Label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: "confident and concise", label: "⚡ Confident & Concise" },
+                    { id: "warm and enthusiastic", label: "🌟 Enthusiastic" },
+                    { id: "executive and direct", label: "👔 Executive" },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setTone(item.id)}
+                      className={`rounded-xl px-3.5 py-1.5 text-sm font-bold transition-all ${
+                        tone === item.id
+                          ? "gradient-accent text-primary-foreground shadow-sm"
+                          : "border border-border bg-card text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <Button
+                  onClick={handleGenerateAI}
+                  disabled={generating || chips.length === 0}
+                  className="w-full gradient-accent text-primary-foreground shadow-lg hover:opacity-90 h-12 text-sm font-bold rounded-2xl"
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  {generating ? "Drafting Tailored Emails with AI..." : `Generate AI Emails for ${chips.length} Recipient${chips.length !== 1 ? "s" : ""}`}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Subject Field */}
+          <div className="space-y-2.5">
+            <Label className="text-base font-bold">Subject Line</Label>
+            {generating ? (
+              <div className="shimmer h-12 rounded-2xl" />
+            ) : (
+              <Input
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="e.g. SDE Internship Inquiry — {{company}}"
+                className="bg-secondary/20 h-12 text-base rounded-2xl font-medium"
+              />
+            )}
+          </div>
+
+          {/* Body Field */}
+          <div className="space-y-2.5">
+            <Label className="text-base font-bold">Email Body</Label>
+            {generating ? (
+              <div className="space-y-3 py-4">
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="shimmer h-5 rounded-lg" style={{ width: `${92 - i * 8}%` }} />
+                ))}
+              </div>
+            ) : (
+              <Textarea
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                rows={11}
+                placeholder="Write your email message..."
+                className="resize-none font-mono text-base leading-relaxed p-4 rounded-2xl"
+              />
+            )}
+          </div>
+
+          {/* Resume PDF Attachment Dropzone */}
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragging(false);
+              const f = e.dataTransfer.files?.[0];
+              if (f) handleFileUpload(f);
+            }}
+            onClick={() => fileInputRef.current?.click()}
+            className={`cursor-pointer rounded-2xl border-2 border-dashed p-5 text-center transition-all ${
+              dragging
+                ? "border-primary bg-primary/10"
+                : "border-border hover:bg-secondary/40"
+            }`}
+          >
+            <Paperclip className="mx-auto mb-2 h-5 w-5 text-muted-foreground" />
+            {uploadingFile ? (
+              <span className="text-sm text-muted-foreground flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" /> Uploading resume...
+              </span>
+            ) : file ? (
+              <div className="flex items-center justify-center gap-2 text-sm font-bold text-foreground">
+                <span>📎 {file.name}</span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setFile(null);
+                  }}
+                  className="text-destructive hover:underline ml-2 text-xs"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <span className="text-sm text-muted-foreground font-medium">
+                Drag &amp; drop your resume (PDF, max 5MB), or click to browse
+              </span>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handleFileUpload(f);
+              }}
+            />
+          </div>
+
+          {/* Send Speed Throttling Bar */}
+          <div className="space-y-4 rounded-3xl border border-border bg-secondary/30 p-5">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-bold flex items-center gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground" /> Send Speed &amp; Throttling
+              </Label>
+              <span className="text-xs font-semibold text-muted-foreground">
+                Est: {getEstimatedTime(chips.length)}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-4 gap-2.5">
+              {[
+                { id: "fast" as const, label: "Fast", desc: "15s gap", icon: Zap },
+                { id: "safe" as const, label: "Safe", desc: "30s gap", icon: Shield },
+                { id: "stealth" as const, label: "Stealth", desc: "60s gap", icon: Turtle },
+                { id: "custom" as const, label: "Custom", desc: `${customDelay}s`, icon: Clock },
+              ].map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setSendSpeed(s.id)}
+                  className={`flex flex-col items-center gap-1 rounded-2xl border p-3 text-xs transition-all ${
+                    sendSpeed === s.id
+                      ? "gradient-accent text-primary-foreground font-bold shadow-md border-transparent"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <s.icon className="h-4 w-4" />
+                  <span className="font-bold text-sm">{s.label}</span>
+                  <span className="text-[10px] opacity-75">{s.desc}</span>
+                </button>
+              ))}
+            </div>
+
+            {sendSpeed === "custom" && (
+              <div className="flex items-center gap-3 pt-2">
+                <Input
+                  type="number"
+                  min={10}
+                  max={300}
+                  value={customDelay}
+                  onChange={(e) => setCustomDelay(Math.max(10, Math.min(300, Number(e.target.value))))}
+                  className="h-10 w-24 text-sm font-bold"
+                />
+                <span className="text-sm text-muted-foreground">seconds between each email (10-300)</span>
+              </div>
+            )}
+
+            {dailyLimits && (
+              <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-border/60 pt-3">
+                <span className="font-medium">Daily Safe Quota: {dailyLimits.sentToday}/{dailyLimits.safeLimit} used</span>
+                <span className="text-success font-bold">{dailyLimits.remaining} remaining</span>
+              </div>
+            )}
+          </div>
+
+          {/* Send Button */}
+          <Button
+            onClick={handleSend}
+            disabled={sending || chips.length === 0}
+            className="w-full gradient-accent text-primary-foreground shadow-[var(--shadow-glow)] hover:opacity-90 h-13 text-base font-bold rounded-2xl"
+          >
+            {sending ? (
+              <Loader2 className="mr-2.5 h-5 w-5 animate-spin" />
+            ) : (
+              <SendIcon className="mr-2.5 h-5 w-5" />
+            )}
+            {sending
+              ? "Sending Emails via Gmail SMTP..."
+              : `Send to ${chips.length} Recipient${chips.length !== 1 ? "s" : ""}`}
+          </Button>
+
+          {sendProgress && (
+            <div className="space-y-2.5 rounded-2xl border border-border bg-secondary/40 p-4 text-sm">
+              <div className="flex justify-between font-bold">
+                <span className="text-foreground">{sendProgress.status}</span>
+                <span>{sendProgress.sent + sendProgress.failed}/{sendProgress.total}</span>
+              </div>
+              <Progress value={((sendProgress.sent + sendProgress.failed) / sendProgress.total) * 100} className="h-2.5 rounded-full" />
+            </div>
+          )}
+        </div>
+
+        {/* Right Column: Live Email Preview (5 cols) */}
+        <div className="surface p-8 lg:col-span-5 h-fit lg:sticky lg:top-6 space-y-5">
+          <div className="flex items-center justify-between border-b border-border pb-4">
+            <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+              Live Preview
+            </p>
+            {generatedEmails.length > 1 && (
+              <span className="text-sm text-violet font-bold">
+                {activePreviewIdx + 1} of {generatedEmails.length} drafts
+              </span>
+            )}
+          </div>
+
+          {/* Carousel selector if multiple AI drafts */}
+          {generatedEmails.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {generatedEmails.map((em, idx) => (
+                <button
+                  key={em.recipientId || idx}
+                  type="button"
+                  onClick={() => {
+                    setActivePreviewIdx(idx);
+                    setSubject(em.subject);
+                    setBody(em.body);
+                  }}
+                  className={`shrink-0 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
+                    activePreviewIdx === idx
+                      ? "gradient-accent text-primary-foreground shadow-sm"
+                      : "border border-border bg-secondary/50 text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {em.company || em.email.split("@")[0]}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Rendered Email Card */}
+          <div className="rounded-3xl border border-border bg-secondary/30 p-6 space-y-5">
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <div className="flex items-center gap-3">
+                <span className="gradient-accent grid h-10 w-10 place-items-center rounded-2xl text-sm font-black text-primary-foreground">
+                  RO
+                </span>
+                <div className="text-sm">
+                  <p className="font-bold text-foreground">You (via ReachOut)</p>
+                  <p className="text-muted-foreground truncate max-w-[240px] text-xs">
+                    To: {chips.length ? chips.slice(0, 2).join(", ") + (chips.length > 2 ? ` +${chips.length - 2}` : "") : "recipient@company.com"}
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs text-muted-foreground font-medium">Now</span>
+            </div>
+
+            <div>
+              <h3 className="text-base font-bold text-foreground leading-snug">
+                {subject || <span className="text-muted-foreground font-normal">Subject line will appear here</span>}
+              </h3>
+            </div>
+
+            <div className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground max-h-96 overflow-y-auto">
+              {body || "Your personalized email body will appear here as you type or generate with AI."}
+            </div>
+
+            {file && (
+              <div className="inline-flex items-center gap-2.5 rounded-2xl border border-border bg-card px-4 py-2.5 text-xs font-bold text-foreground shadow-sm">
+                <Paperclip className="h-4 w-4 text-violet" />
+                <span>{file.name}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

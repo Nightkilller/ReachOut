@@ -1,0 +1,116 @@
+// ColdMail — Prisma Schema
+// User model stores Clerk ID and SMTP credentials (app password encrypted at rest)
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id      String @id @default(cuid())
+  clerkId String @unique @map("clerk_id")
+  email   String @unique
+  name    String?
+  image   String?
+
+  // SMTP credentials — smtpPassword is AES-256-GCM encrypted before storage
+  smtpEmail    String? @map("smtp_email")
+  smtpPassword String? @map("smtp_password")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  recipients     Recipient[]
+  campaigns      Campaign[]
+  profile        UserProfile?
+
+  @@map("users")
+}
+
+model UserProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique @map("user_id")
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  fullName       String?  @map("full_name")
+  currentRole    String?  @map("current_role")
+  skills         String?  // comma-separated or text
+  bio            String?  // background / experience summary
+  targetRoles    String?  @map("target_roles") // e.g. SDE Intern, Backend Engineer
+  portfolioUrl   String?  @map("portfolio_url")
+  linkedinUrl    String?  @map("linkedin_url")
+  githubUrl      String?  @map("github_url")
+  defaultGoal    String?  @default("internship") @map("default_goal") // internship | fulltime | networking | sales
+
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("user_profiles")
+}
+
+model Recipient {
+  id      String  @id @default(cuid())
+  email   String
+  name    String?
+  company String?
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  campaignEmails CampaignEmail[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, email])
+  @@map("recipients")
+}
+
+model Campaign {
+  id      String @id @default(cuid())
+  subject String
+  body    String // HTML body with merge tags or fallback
+
+  attachmentPath String? @map("attachment_path") // path to resume PDF
+  attachmentName String? @map("attachment_name") // original filename
+
+  status    String @default("draft") // draft | sending | completed | failed
+  totalCount Int   @default(0) @map("total_count")
+  sentCount  Int   @default(0) @map("sent_count")
+  failedCount Int  @default(0) @map("failed_count")
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  emails CampaignEmail[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("campaigns")
+}
+
+model CampaignEmail {
+  id String @id @default(cuid())
+
+  status   String  @default("pending") // pending | sent | failed
+  error    String? // error message if failed
+  sentAt   DateTime? @map("sent_at")
+
+  // Per-recipient custom content (from AI generation)
+  customSubject String? @map("custom_subject")
+  customBody    String? @map("custom_body")
+
+  campaignId  String    @map("campaign_id")
+  campaign    Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  recipientId String    @map("recipient_id")
+  recipient   Recipient @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, recipientId])
+  @@map("campaign_emails")
+}
