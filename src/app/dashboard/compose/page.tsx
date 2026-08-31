@@ -547,80 +547,6 @@ export default function ComposePage() {
             )}
           </div>
 
-          {/* AI Settings Section (if AI Mode) */}
-          {activeMode === "ai" && (
-            <div className="space-y-5 rounded-3xl border border-violet/20 bg-violet/5 p-6">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-violet flex items-center gap-2">
-                  <Sparkles className="h-4 w-4" /> AI Outreach Strategy
-                </span>
-                <span className="text-xs text-muted-foreground font-medium">Powered by Groq (LLaMA 3.3 70B) &amp; Gemini</span>
-              </div>
-
-              {/* Goal Pills */}
-              <div className="space-y-2">
-                <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Goal</Label>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { id: "internship", label: "🎓 Internship" },
-                    { id: "fulltime", label: "💼 Full-Time" },
-                    { id: "networking", label: "☕ Coffee Chat" },
-                    { id: "sales", label: "🚀 Pitch" },
-                  ].map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setGoal(item.id)}
-                      className={`rounded-xl px-3.5 py-1.5 text-sm font-bold transition-all ${
-                        goal === item.id
-                          ? "gradient-accent text-primary-foreground shadow-sm"
-                          : "border border-border bg-card text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Tone Pills */}
-              <div className="space-y-2">
-                <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tone</Label>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { id: "confident and concise", label: "⚡ Confident & Concise" },
-                    { id: "warm and enthusiastic", label: "🌟 Enthusiastic" },
-                    { id: "executive and direct", label: "👔 Executive" },
-                  ].map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setTone(item.id)}
-                      className={`rounded-xl px-3.5 py-1.5 text-sm font-bold transition-all ${
-                        tone === item.id
-                          ? "gradient-accent text-primary-foreground shadow-sm"
-                          : "border border-border bg-card text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <Button
-                  onClick={handleGenerateAI}
-                  disabled={generating || chips.length === 0}
-                  className="w-full gradient-accent text-primary-foreground shadow-lg hover:opacity-90 h-12 text-sm font-bold rounded-2xl"
-                >
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  {generating ? "Crafting Tailored Subjects & Body with AI..." : `Generate Personalized Emails for ${chips.length} Recipient${chips.length !== 1 ? "s" : ""}`}
-                </Button>
-              </div>
-            </div>
-          )}
-
           {/* Subject Line Field */}
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
@@ -718,6 +644,80 @@ export default function ComposePage() {
               }}
             />
           </div>
+
+          {/* AI Settings Section (if AI Mode) — Placed just below body and attachment */}
+          {activeMode === "ai" && (
+            <div className="space-y-5 rounded-3xl border border-violet/20 bg-violet/5 p-6 shadow-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold text-violet flex items-center gap-2">
+                  <Sparkles className="h-4 w-4" /> AI Outreach Strategy
+                </span>
+                <span className="text-xs text-muted-foreground font-medium">Powered by Groq &amp; Gemini</span>
+              </div>
+
+              {/* Goal Pills */}
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Goal</Label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: "internship", label: "🎓 Internship" },
+                    { id: "fulltime", label: "💼 Full-Time" },
+                    { id: "networking", label: "☕ Coffee Chat" },
+                    { id: "sales", label: "🚀 Pitch" },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setGoal(item.id)}
+                      className={`rounded-xl px-3.5 py-1.5 text-sm font-bold transition-all ${
+                        goal === item.id
+                          ? "gradient-accent text-primary-foreground shadow-sm"
+                          : "border border-border bg-card text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tone Pills */}
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tone</Label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { id: "confident and concise", label: "⚡ Confident & Concise" },
+                    { id: "warm and enthusiastic", label: "🌟 Enthusiastic" },
+                    { id: "executive and direct", label: "👔 Executive" },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setTone(item.id)}
+                      className={`rounded-xl px-3.5 py-1.5 text-sm font-bold transition-all ${
+                        tone === item.id
+                          ? "gradient-accent text-primary-foreground shadow-sm"
+                          : "border border-border bg-card text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <Button
+                  onClick={handleGenerateAI}
+                  disabled={generating || chips.length === 0}
+                  className="w-full gradient-accent text-primary-foreground shadow-lg hover:opacity-90 h-12 text-sm font-bold rounded-2xl"
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  {generating ? "Crafting Tailored Subjects & Body with AI..." : `Generate Personalized Emails for ${chips.length} Recipient${chips.length !== 1 ? "s" : ""}`}
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Send Speed Throttling Bar */}
           <div className="space-y-4 rounded-3xl border border-border bg-secondary/30 p-5">
