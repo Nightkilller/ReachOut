@@ -16,7 +16,7 @@ export default async function HomePage() {
       <div className="surface animate-fade-up relative z-10 flex max-w-2xl flex-col items-center p-8 sm:p-12 text-center shadow-xl">
         {/* Logo */}
         <div className="mb-6 flex items-center gap-3">
-          <img src="/logo.svg" alt="ReachOut" className="h-14 w-14 rounded-2xl shadow-[0_8px_20px_-6px_oklch(0.62_0.176_254/55%)]" />
+          <img src="/logo-icon.svg" alt="ReachOut" className="h-12 w-12 object-contain text-violet" />
           <h1 className="text-4xl font-bold tracking-tight">
             <span className="text-foreground">Reach</span>
             <span className="gradient-text">Out</span>

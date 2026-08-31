@@ -1,25 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
-  <defs>
-    <!-- Background Gradient -->
-    <linearGradient id="logo-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#8B5CF6"/>
-      <stop offset="50%" stop-color="#6366F1"/>
-      <stop offset="100%" stop-color="#4F46E5"/>
-    </linearGradient>
-
-    <!-- Subtle Inner Glow -->
-    <radialGradient id="logo-glow" cx="30%" cy="20%" r="80%">
-      <stop offset="0%" stop-color="#DDD6FE" stop-opacity="0.35"/>
-      <stop offset="100%" stop-color="#4338CA" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-
-  <!-- Rounded Gradient App Badge -->
-  <rect width="120" height="120" rx="28" fill="url(#logo-bg)"/>
-  <rect width="120" height="120" rx="28" fill="url(#logo-glow)"/>
-  <rect width="120" height="120" rx="28" stroke="#FFFFFF" stroke-opacity="0.15" stroke-width="1"/>
-
-  <!-- User's Curved Wings Geometric Logo Glyph -->
+<svg
+  width="120"
+  height="120"
+  viewBox="0 0 120 120"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
   <!-- Upper-left curved wing -->
   <path
     d="M15 58

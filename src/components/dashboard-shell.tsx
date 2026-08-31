@@ -41,10 +41,10 @@ function Rail() {
       {/* ReachOut Logo icon */}
       <Link
         href="/dashboard"
-        className="mb-5 grid h-12 w-12 place-items-center rounded-2xl transition-transform hover:scale-105"
+        className="mb-5 grid h-12 w-12 place-items-center transition-transform hover:scale-105"
         title="ReachOut"
       >
-        <img src="/logo.svg" alt="ReachOut" className="h-12 w-12 rounded-2xl shadow-[0_8px_18px_-6px_oklch(0.62_0.176_254/55%)]" />
+        <img src="/logo.svg" alt="ReachOut" className="h-10 w-10 object-contain" />
       </Link>
 
       <nav className="flex flex-1 flex-col items-center gap-3">
