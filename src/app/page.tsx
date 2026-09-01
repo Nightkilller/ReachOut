@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SignInButton } from "@/components/sign-in-button";
 import { Sparkles, Shield, Zap, Send, Users, Calendar } from "lucide-react";
 
@@ -8,10 +9,10 @@ export default function HomePage() {
       {/* ── Navbar ── */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100">
         <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+          <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
             <img src="/logo-icon.svg" alt="ReachOut" className="h-7 w-7" />
             <span className="text-xl font-bold tracking-tight text-slate-900">ReachOut</span>
-          </div>
+          </Link>
           <SignInButton variant="nav" />
         </div>
       </header>

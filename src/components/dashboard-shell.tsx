@@ -39,11 +39,11 @@ function Rail() {
 
   return (
     <div className="flex h-full w-[84px] flex-col items-center gap-3 rounded-[2rem] bg-sidebar/95 py-6 text-sidebar-foreground shadow-[0_20px_50px_-20px_oklch(0.2_0.02_265/45%)] backdrop-blur-xl">
-      {/* ReachOut Logo icon */}
+      {/* ReachOut Logo icon — links to front home page */}
       <Link
-        href="/dashboard"
+        href="/"
         className="mb-5 grid h-12 w-12 place-items-center transition-transform hover:scale-105"
-        title="ReachOut"
+        title="ReachOut Home"
       >
         <img src="/logo.svg" alt="ReachOut" className="h-10 w-10 object-contain" />
       </Link>
@@ -97,12 +97,16 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
 
   return (
     <div className="flex h-full flex-col gap-6 bg-sidebar p-6 text-sidebar-foreground">
-      <div className="flex items-center gap-3">
+      <Link
+        href="/"
+        onClick={onNavigate}
+        className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+      >
         <img src="/logo.svg" alt="ReachOut" className="h-10 w-10 rounded-xl" />
         <span className="text-xl font-bold tracking-tight">
           Reach<span className="gradient-text">Out</span>
         </span>
-      </div>
+      </Link>
 
       <nav className="flex flex-1 flex-col gap-1.5">
         {NAV.map(({ href, label, icon: Icon }) => (
@@ -118,17 +122,20 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
             )}
           >
             <Icon className="h-5 w-5 shrink-0" />
-            <span className="truncate">{label}</span>
+            {label}
           </Link>
         ))}
       </nav>
 
-      <button
-        onClick={() => signOut({ redirectUrl: "/" })}
-        className="flex items-center gap-3.5 rounded-2xl px-4 py-3 text-base font-medium text-destructive hover:bg-destructive/10"
-      >
-        <LogOut className="h-5 w-5" /> Sign out
-      </button>
+      <div className="border-t border-sidebar-border pt-4">
+        <button
+          onClick={() => signOut({ redirectUrl: "/" })}
+          className="flex w-full items-center gap-3.5 rounded-2xl px-4 py-3 text-base font-medium text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+        >
+          <LogOut className="h-5 w-5 shrink-0" />
+          Sign Out
+        </button>
+      </div>
     </div>
   );
 }
@@ -142,9 +149,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   return (
-    <div className="min-h-screen w-full p-2 sm:p-3 lg:p-4 flex flex-col">
-      <div className="flex w-full flex-1 gap-4">
-        {/* Desktop Rail Sidebar */}
+    <div className="relative min-h-screen bg-background p-4 sm:p-5">
+      <div className="flex gap-4">
+        {/* Left Desktop Rail Sidebar (Visible on lg+) */}
         <aside className="sticky top-4 hidden h-[calc(100vh-2rem)] shrink-0 lg:block">
           <Rail />
         </aside>
@@ -159,10 +166,13 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             >
               <Menu className="h-5 w-5" />
             </button>
-            <span className="flex items-center gap-2.5 text-lg font-bold lg:hidden">
+            <Link
+              href="/"
+              className="flex items-center gap-2.5 text-lg font-bold lg:hidden hover:opacity-80 transition-opacity"
+            >
               <img src="/logo.svg" alt="ReachOut" className="h-7 w-7 rounded-lg" />
               Reach<span className="gradient-text">Out</span>
-            </span>
+            </Link>
 
             <div className="ml-auto flex items-center gap-2.5">
               {/* Theme Toggle (Light / Dark) */}
