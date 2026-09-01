@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDbUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getMailTransport, getSenderEmail, sendEmail } from "@/lib/mailer";
+import { getMailCredentials, createGmailTransporter, getSenderEmail, sendEmail } from "@/lib/mailer";
 import { applyMergeTags } from "@/lib/mime";
 import { checkSendLimits } from "@/lib/send-limits";
 import { humanizeEmail } from "@/lib/humanizer";
@@ -52,12 +52,12 @@ export async function POST(
     // No body or invalid JSON — use defaults
   }
 
-  // Get campaign with pending emails
+  // Get campaign with pending or failed emails (allows retrying)
   const campaign = await prisma.campaign.findFirst({
     where: { id, userId: user.id },
     include: {
       emails: {
-        where: { status: "pending" },
+        where: { status: { in: ["pending", "failed"] } },
         include: { recipient: true },
       },
     },
@@ -100,10 +100,12 @@ export async function POST(
     );
   }
 
-  // Get SMTP transport
+  // Get SMTP credentials and create transporter
+  let mailCredentials;
   let transporter;
   try {
-    transporter = await getMailTransport(user.id);
+    mailCredentials = await getMailCredentials(user.id);
+    transporter = createGmailTransporter(mailCredentials.email, mailCredentials.pass, 465);
   } catch (error) {
     return NextResponse.json(
       { error: `Gmail SMTP configuration error: ${error instanceof Error ? error.message : "Unknown error"}` },
@@ -111,9 +113,10 @@ export async function POST(
     );
   }
 
-  // Get sender email
-  const senderEmail = await getSenderEmail(user.id);
-  const fromAddress = user.name ? `"${user.name}" <${senderEmail}>` : senderEmail;
+  // Get sender email & name
+  const senderEmail = mailCredentials.email || (await getSenderEmail(user.id));
+  const senderDisplayName = user.name ? user.name.replace(/["\r\n]/g, "") : "";
+  const fromAddress = senderDisplayName ? `"${senderDisplayName}" <${senderEmail}>` : senderEmail;
 
   // Update campaign status to sending
   await prisma.campaign.update({
@@ -158,8 +161,6 @@ export async function POST(
       }
 
       // ── Humanize the email to make it unique ──
-      // For AI-generated emails (customBody exists), only insert invisible chars
-      // For template emails, apply full humanization (greetings, sign-offs, etc.)
       const isAIGenerated = !!campaignEmail.customBody;
       finalBody = humanizeEmail(finalBody, {
         varyGreetings: !isAIGenerated, // Only vary greetings for templates
@@ -168,15 +169,19 @@ export async function POST(
         varyWhitespace: true,           // Always vary whitespace
       });
 
-      // Send via Nodemailer SMTP
-      await sendEmail(transporter, {
-        from: fromAddress,
-        to: recipient.email,
-        subject: finalSubject,
-        html: finalBody,
-        attachmentPath: campaign.attachmentPath,
-        attachmentName: campaign.attachmentName,
-      });
+      // Send via Nodemailer SMTP with automatic Port 587 fallback
+      await sendEmail(
+        transporter,
+        {
+          from: fromAddress,
+          to: recipient.email,
+          subject: finalSubject,
+          html: finalBody,
+          attachmentPath: campaign.attachmentPath,
+          attachmentName: campaign.attachmentName,
+        },
+        mailCredentials
+      );
 
       // Mark as sent
       await prisma.campaignEmail.update({
