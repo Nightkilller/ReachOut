@@ -1,14 +1,7 @@
-import { redirect } from "next/navigation";
-import { currentUser } from "@clerk/nextjs/server";
 import { SignInButton } from "@/components/sign-in-button";
 import { Sparkles, Shield, Zap, Send, Users, Calendar, ArrowRight } from "lucide-react";
 
-export default async function HomePage() {
-  const user = await currentUser();
-  if (user) {
-    redirect("/dashboard");
-  }
-
+export default function HomePage() {
   return (
     <main className="min-h-screen bg-white text-slate-900 font-sans antialiased">
 
