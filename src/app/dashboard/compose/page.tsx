@@ -91,7 +91,7 @@ export default function ComposePage() {
 
   // Send speed / throttling
   const [sendSpeed, setSendSpeed] = useState<"fast" | "safe" | "stealth" | "custom">("safe");
-  const [customDelay, setCustomDelay] = useState(45);
+  const [customDelay, setCustomDelay] = useState(5);
   const [sending, setSending] = useState(false);
   const [sendProgress, setSendProgress] = useState<{
     total: number;
@@ -159,9 +159,9 @@ export default function ComposePage() {
   // Delay seconds calculation
   const getDelaySeconds = () => {
     switch (sendSpeed) {
-      case "fast": return 15;
-      case "safe": return 30;
-      case "stealth": return 60;
+      case "fast": return 2;
+      case "safe": return 5;
+      case "stealth": return 15;
       case "custom": return customDelay;
     }
   };
@@ -322,40 +322,63 @@ export default function ComposePage() {
 
     try {
       // 1. Ensure recipients exist in DB
-      const recipientIds: string[] = [];
       const recipientMap = new Map<string, string>(); // email -> recipientId
 
-      for (const email of chips) {
-        let existing = addressBook.find((r) => r.email.toLowerCase() === email.toLowerCase());
-        if (!existing) {
-          const createRes = await fetch("/api/recipients", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+      for (const r of addressBook) {
+        recipientMap.set(r.email.toLowerCase(), r.id);
+      }
+
+      // Find any chips that need to be created in DB
+      const missingEmails = chips.filter(
+        (email) => !recipientMap.has(email.toLowerCase())
+      );
+
+      if (missingEmails.length > 0) {
+        const createRes = await fetch("/api/recipients", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            recipients: missingEmails.map((email) => ({
               email,
               name: inferNameFromEmail(email),
               company: getCompanyFromEmail(email),
-            }),
-          });
-          if (createRes.ok) {
-            existing = await createRes.json();
+            })),
+          }),
+        });
+
+        if (createRes.ok) {
+          const createData = await createRes.json();
+          if (Array.isArray(createData.recipients)) {
+            for (const r of createData.recipients) {
+              recipientMap.set(r.email.toLowerCase(), r.id);
+            }
           }
-        }
-        if (existing?.id) {
-          recipientIds.push(existing.id);
-          recipientMap.set(email.toLowerCase(), existing.id);
         }
       }
 
+      const recipientIds: string[] = [];
+      for (const email of chips) {
+        const id = recipientMap.get(email.toLowerCase());
+        if (id) {
+          recipientIds.push(id);
+        }
+      }
+
+      if (recipientIds.length === 0) {
+        throw new Error("Could not register recipients. Please verify the email addresses.");
+      }
+
       // Map generated emails to recipientIds
-      const customEmails = generatedEmails.map((e) => {
-        const id = e.recipientId || recipientMap.get(e.email.toLowerCase());
-        return {
-          recipientId: id!,
-          subject: e.subject || subject,
-          body: e.body || body,
-        };
-      }).filter((e) => !!e.recipientId);
+      const customEmails = generatedEmails
+        .map((e) => {
+          const id = e.recipientId || recipientMap.get(e.email.toLowerCase());
+          return {
+            recipientId: id!,
+            subject: e.subject || subject,
+            body: e.body || body,
+          };
+        })
+        .filter((e) => !!e.recipientId);
 
       // Determine a clean, professional overall campaign subject title
       const sender = profile?.fullName || "Aditya Gupta";
@@ -386,7 +409,10 @@ export default function ComposePage() {
 
       const campaign = await campRes.json();
 
-      setSendProgress((p) => ({ ...p!, status: `Sending emails via Gmail SMTP (${delay}s gap)...` }));
+      setSendProgress((p) => ({
+        ...p!,
+        status: `Sending emails via Gmail SMTP (${delay}s gap)...`,
+      }));
 
       const sendRes = await fetch(`/api/campaigns/${campaign.id}/send`, {
         method: "POST",
@@ -394,9 +420,10 @@ export default function ComposePage() {
         body: JSON.stringify({ delaySeconds: delay }),
       });
 
-      const result = await sendRes.json();
+      let sendResponse = sendRes;
+      let result = await sendRes.json();
 
-      if (sendRes.status === 429 && result.requiresConfirmation) {
+      if (sendResponse.status === 429 && result.requiresConfirmation) {
         const proceed = window.confirm(`${result.error}\n\nDo you want to send anyway?`);
         if (proceed) {
           const retryRes = await fetch(`/api/campaigns/${campaign.id}/send`, {
@@ -406,7 +433,8 @@ export default function ComposePage() {
           });
           const retryResult = await retryRes.json();
           if (!retryRes.ok) throw new Error(retryResult.error || "Send failed");
-          Object.assign(result, retryResult);
+          sendResponse = retryRes;
+          result = retryResult;
         } else {
           setSending(false);
           setSendProgress(null);
@@ -414,14 +442,29 @@ export default function ComposePage() {
         }
       }
 
-      if (sendRes.ok) {
+      if (sendResponse.ok) {
         setSendProgress({
           total: result.totalCount,
           sent: result.sentCount,
           failed: result.failedCount,
-          status: result.failedCount === 0 ? "All sent successfully!" : `Sent with ${result.failedCount} failure(s)`,
+          status:
+            result.failedCount === 0
+              ? "All sent successfully!"
+              : `Sent ${result.sentCount}, Failed ${result.failedCount}`,
         });
-        toast.success(`🎉 Outreach campaign sent successfully!`);
+
+        if (result.sentCount === 0 && result.failedCount > 0) {
+          const firstErr =
+            result.errors?.[0]?.error ||
+            "Please check your Gmail address and App Password in Settings.";
+          toast.error(`Email sending failed: ${firstErr}`);
+        } else if (result.failedCount > 0) {
+          toast.warning(
+            `Sent ${result.sentCount} email(s), but ${result.failedCount} failed.`
+          );
+        } else {
+          toast.success(`🎉 All ${result.sentCount} emails sent successfully!`);
+        }
       } else {
         throw new Error(result.error || "Send failed");
       }
@@ -671,9 +714,9 @@ export default function ComposePage() {
 
             <div className="grid grid-cols-4 gap-2">
               {[
-                { id: "fast" as const, label: "Fast", desc: "15s gap", icon: Zap },
-                { id: "safe" as const, label: "Safe", desc: "30s gap", icon: Shield },
-                { id: "stealth" as const, label: "Stealth", desc: "60s gap", icon: Turtle },
+                { id: "fast" as const, label: "Fast", desc: "2s gap", icon: Zap },
+                { id: "safe" as const, label: "Safe", desc: "5s gap", icon: Shield },
+                { id: "stealth" as const, label: "Stealth", desc: "15s gap", icon: Turtle },
                 { id: "custom" as const, label: "Custom", desc: `${customDelay}s`, icon: Clock },
               ].map((s) => (
                 <button
@@ -697,13 +740,13 @@ export default function ComposePage() {
               <div className="flex items-center gap-3 pt-1">
                 <Input
                   type="number"
-                  min={10}
+                  min={0}
                   max={300}
                   value={customDelay}
-                  onChange={(e) => setCustomDelay(Math.max(10, Math.min(300, Number(e.target.value))))}
+                  onChange={(e) => setCustomDelay(Math.max(0, Math.min(300, Number(e.target.value))))}
                   className="h-9 w-20 text-xs font-bold"
                 />
-                <span className="text-xs text-muted-foreground">seconds between each email (10-300)</span>
+                <span className="text-xs text-muted-foreground">seconds between each email (0-300)</span>
               </div>
             )}
 

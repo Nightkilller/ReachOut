@@ -22,8 +22,9 @@ export async function GET() {
 }
 
 /**
- * POST /api/recipients — bulk-add recipients.
+ * POST /api/recipients — add or bulk-add recipients.
  * Accepts either:
+ *   - { email: string, name?: string, company?: string } (single recipient)
  *   - { recipients: [{ email, name?, company? }] }  (JSON array)
  *   - { csv: "..." }  (raw CSV text to parse)
  */
@@ -35,6 +36,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   let toAdd: { email: string; name?: string; company?: string }[] = [];
+  const isSingle = !body.csv && !Array.isArray(body.recipients) && !!body.email;
 
   if (body.csv) {
     // Parse CSV text
@@ -43,9 +45,17 @@ export async function POST(req: NextRequest) {
     toAdd = body.recipients.filter(
       (r: { email?: string }) => r.email && isValidEmail(r.email)
     );
+  } else if (body.email && isValidEmail(body.email)) {
+    toAdd = [
+      {
+        email: body.email,
+        name: body.name,
+        company: body.company,
+      },
+    ];
   } else {
     return NextResponse.json(
-      { error: "Provide 'csv' or 'recipients' array" },
+      { error: "Provide 'email', 'recipients' array, or 'csv'" },
       { status: 400 }
     );
   }
@@ -93,10 +103,40 @@ export async function POST(req: NextRequest) {
     )
   );
 
-  const added = results.filter((r) => r.status === "fulfilled").length;
+  const upsertedRecipients = results
+    .filter(
+      (
+        r
+      ): r is PromiseFulfilledResult<{
+        id: string;
+        email: string;
+        name: string | null;
+        company: string | null;
+        userId: string;
+        createdAt: Date;
+      }> => r.status === "fulfilled"
+    )
+    .map((r) => r.value);
+
+  const added = upsertedRecipients.length;
   const failed = results.filter((r) => r.status === "rejected").length;
 
-  return NextResponse.json({ added, failed, total: toAdd.length });
+  if (isSingle) {
+    if (upsertedRecipients.length > 0) {
+      return NextResponse.json(upsertedRecipients[0]);
+    }
+    return NextResponse.json(
+      { error: "Failed to save recipient" },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({
+    added,
+    failed,
+    total: toAdd.length,
+    recipients: upsertedRecipients,
+  });
 }
 
 /**

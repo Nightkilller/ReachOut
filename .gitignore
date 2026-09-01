@@ -19,6 +19,8 @@
 # Uploads & User Files
 /public/uploads/*
 !/public/uploads/.gitkeep
+*.csv
+emails.csv
 
 # Environment variables & secrets
 .env

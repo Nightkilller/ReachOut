@@ -43,13 +43,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim().replace(/\s+/g, "");
+
     // Encrypt the app password before storing
-    const encryptedPassword = encrypt(password);
+    const encryptedPassword = encrypt(cleanPassword);
 
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        smtpEmail: email.trim().toLowerCase(),
+        smtpEmail: cleanEmail,
         smtpPassword: encryptedPassword,
       },
     });

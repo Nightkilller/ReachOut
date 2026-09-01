@@ -26,18 +26,22 @@ export async function getMailTransport(userId: string) {
 
   if (!user.smtpEmail || !user.smtpPassword) {
     throw new Error(
-      "Gmail SMTP not configured — go to Settings and add your Gmail address and App Password"
+      "Gmail SMTP not configured — please go to Settings and add your Gmail address and 16-character App Password"
     );
   }
 
-  const decryptedPassword = decrypt(user.smtpPassword);
+  const decryptedPassword = decrypt(user.smtpPassword).trim().replace(/\s+/g, "");
 
   return nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
-      user: user.smtpEmail,
+      user: user.smtpEmail.trim(),
       pass: decryptedPassword,
     },
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
   });
 }
 
@@ -77,15 +81,21 @@ export async function sendEmail(
   };
 
   // Add attachment if provided
-  if (options.attachmentPath && fs.existsSync(options.attachmentPath)) {
-    const fileName =
-      options.attachmentName || path.basename(options.attachmentPath);
-    mailOptions.attachments = [
-      {
-        filename: fileName,
-        path: options.attachmentPath,
-      },
-    ];
+  if (options.attachmentPath) {
+    const resolvedPath = path.isAbsolute(options.attachmentPath)
+      ? options.attachmentPath
+      : path.join(process.cwd(), options.attachmentPath);
+
+    if (fs.existsSync(resolvedPath)) {
+      const fileName =
+        options.attachmentName || path.basename(resolvedPath);
+      mailOptions.attachments = [
+        {
+          filename: fileName,
+          path: resolvedPath,
+        },
+      ];
+    }
   }
 
   return transporter.sendMail(mailOptions);
@@ -100,12 +110,19 @@ export async function testSmtpConnection(
   password: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim().replace(/\s+/g, "");
+
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
       auth: {
-        user: email,
-        pass: password,
+        user: cleanEmail,
+        pass: cleanPassword,
       },
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
     });
 
     await transporter.verify();

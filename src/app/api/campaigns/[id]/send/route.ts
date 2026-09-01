@@ -6,10 +6,12 @@ import { applyMergeTags } from "@/lib/mime";
 import { checkSendLimits } from "@/lib/send-limits";
 import { humanizeEmail } from "@/lib/humanizer";
 
+export const maxDuration = 300;
+
 /** Default delay between emails in seconds */
-const DEFAULT_DELAY_SECONDS = 30;
-/** Minimum allowed delay (prevent abuse) */
-const MIN_DELAY_SECONDS = 10;
+const DEFAULT_DELAY_SECONDS = 5;
+/** Minimum allowed delay (0 seconds for instant delivery) */
+const MIN_DELAY_SECONDS = 0;
 /** Maximum allowed delay */
 const MAX_DELAY_SECONDS = 300;
 
@@ -18,7 +20,7 @@ const MAX_DELAY_SECONDS = 300;
  * Sends individual emails to each recipient via Gmail SMTP.
  *
  * Optional body params:
- *   - delaySeconds: number (10-300, default 30) — gap between each email
+ *   - delaySeconds: number (0-300, default 5) — gap between each email
  *   - skipLimitCheck: boolean — override daily limit warning (still blocked at hard limit)
  */
 export async function POST(
@@ -104,13 +106,14 @@ export async function POST(
     transporter = await getMailTransport(user.id);
   } catch (error) {
     return NextResponse.json(
-      { error: `Gmail SMTP connection failed: ${error instanceof Error ? error.message : "Unknown error"}` },
+      { error: `Gmail SMTP configuration error: ${error instanceof Error ? error.message : "Unknown error"}` },
       { status: 500 }
     );
   }
 
   // Get sender email
   const senderEmail = await getSenderEmail(user.id);
+  const fromAddress = user.name ? `"${user.name}" <${senderEmail}>` : senderEmail;
 
   // Update campaign status to sending
   await prisma.campaign.update({
@@ -149,6 +152,9 @@ export async function POST(
           name: recipient.name,
           company: recipient.company,
         });
+        if (!finalBody.includes("<p>") && !finalBody.includes("<br>")) {
+          finalBody = finalBody.replace(/\n/g, "<br>");
+        }
       }
 
       // ── Humanize the email to make it unique ──
@@ -164,7 +170,7 @@ export async function POST(
 
       // Send via Nodemailer SMTP
       await sendEmail(transporter, {
-        from: senderEmail,
+        from: fromAddress,
         to: recipient.email,
         subject: finalSubject,
         html: finalBody,
@@ -175,7 +181,7 @@ export async function POST(
       // Mark as sent
       await prisma.campaignEmail.update({
         where: { id: campaignEmail.id },
-        data: { status: "sent", sentAt: new Date() },
+        data: { status: "sent", sentAt: new Date(), error: null },
       });
 
       sentCount++;
@@ -188,14 +194,14 @@ export async function POST(
 
       // ── Configurable delay between sends ──
       // Skip delay after the last email
-      if (i < campaign.emails.length - 1) {
+      if (i < campaign.emails.length - 1 && delaySeconds > 0) {
         await new Promise((resolve) =>
           setTimeout(resolve, delaySeconds * 1000)
         );
       }
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
+        error instanceof Error ? error.message : "Failed to send via SMTP";
 
       // Mark as failed
       await prisma.campaignEmail.update({
@@ -229,5 +235,12 @@ export async function POST(
     },
   });
 
-  return NextResponse.json(updatedCampaign);
+  const failureErrors = updatedCampaign.emails
+    .filter((e) => e.status === "failed")
+    .map((e) => ({ email: e.recipient.email, error: e.error }));
+
+  return NextResponse.json({
+    ...updatedCampaign,
+    errors: failureErrors,
+  });
 }
