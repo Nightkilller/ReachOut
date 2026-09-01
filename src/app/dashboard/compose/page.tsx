@@ -571,7 +571,20 @@ export default function ComposePage() {
 
           {/* Body Field */}
           <div className="space-y-2">
-            <Label className="text-sm font-bold">Email Message Body</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-bold">Email Message Body</Label>
+              {activeMode === "ai" && (
+                <button
+                  type="button"
+                  onClick={handleGenerateAI}
+                  disabled={generating || chips.length === 0}
+                  className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 font-bold transition-colors disabled:opacity-50"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  {generating ? "Generating..." : "Generate with AI"}
+                </button>
+              )}
+            </div>
             {generating ? (
               <div className="space-y-2.5 py-3">
                 {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -813,80 +826,6 @@ export default function ComposePage() {
               )}
             </div>
           </div>
-
-          {/* AI Outreach Strategy Section (Right Side below Mail Preview) */}
-          {activeMode === "ai" && (
-            <div className="surface space-y-4 p-5 sm:p-6 shadow-sm">
-              <div className="flex items-center justify-between border-b border-border pb-3">
-                <span className="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-2">
-                  <Sparkles className="h-4 w-4" /> AI Outreach Strategy
-                </span>
-                <span className="text-[11px] text-muted-foreground font-medium">Groq &amp; Gemini</span>
-              </div>
-
-              {/* Goal Pills */}
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Goal</Label>
-                <div className="flex flex-wrap gap-1.5">
-                  {[
-                    { id: "internship", label: "Internship" },
-                    { id: "fulltime", label: "Full-Time" },
-                    { id: "networking", label: "Coffee Chat" },
-                    { id: "sales", label: "Pitch" },
-                  ].map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setGoal(item.id)}
-                      className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-                        goal === item.id
-                          ? "gradient-accent text-primary-foreground shadow-sm"
-                          : "border border-border bg-card text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Tone Pills */}
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Tone</Label>
-                <div className="flex flex-wrap gap-1.5">
-                  {[
-                    { id: "confident and concise", label: "Confident & Concise" },
-                    { id: "warm and enthusiastic", label: "Enthusiastic" },
-                    { id: "executive and direct", label: "Executive" },
-                  ].map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setTone(item.id)}
-                      className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-                        tone === item.id
-                          ? "gradient-accent text-primary-foreground shadow-sm"
-                          : "border border-border bg-card text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-1">
-                <Button
-                  onClick={handleGenerateAI}
-                  disabled={generating || chips.length === 0}
-                  className="w-full gradient-accent text-primary-foreground shadow-lg hover:opacity-90 h-11 text-xs sm:text-sm font-bold rounded-2xl"
-                >
-                  <Sparkles className="mr-1.5 h-4 w-4" />
-                  {generating ? "Crafting with AI..." : `Generate Personalized Emails for ${chips.length} Recipient${chips.length !== 1 ? "s" : ""}`}
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
