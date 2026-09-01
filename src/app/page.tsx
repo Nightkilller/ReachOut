@@ -1,5 +1,5 @@
 import { SignInButton } from "@/components/sign-in-button";
-import { Sparkles, Shield, Zap, Send, Users, Calendar, ArrowRight } from "lucide-react";
+import { Sparkles, Shield, Zap, Send, Users, Calendar } from "lucide-react";
 
 export default function HomePage() {
   return (
