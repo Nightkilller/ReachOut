@@ -436,25 +436,25 @@ export default function ComposePage() {
   const activeEmailForPreview = generatedEmails[activePreviewIdx];
 
   return (
-    <div className="space-y-8 w-full">
+    <div className="space-y-5 w-full">
       <PageHeader
         title="Compose Outreach"
         description="Write it once, let AI personalize it uniquely per company domain."
       />
 
-      <div className="grid gap-8 lg:grid-cols-12 w-full">
+      <div className="grid gap-6 lg:grid-cols-12 w-full items-start">
         {/* Left Column: Form Controls (7 cols) */}
-        <div className="surface space-y-6 p-8 lg:col-span-7">
+        <div className="surface space-y-5 p-6 sm:p-7 lg:col-span-7">
           {/* Mode Switcher Pills */}
-          <div className="flex items-center justify-between border-b border-border pb-5">
-            <Label className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+          <div className="flex items-center justify-between border-b border-border pb-4">
+            <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
               Campaign Mode
             </Label>
             <div className="flex rounded-2xl bg-secondary/80 p-1.5 border border-border">
               <button
                 type="button"
                 onClick={() => setActiveMode("ai")}
-                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all ${
+                className={`flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs sm:text-sm font-bold transition-all ${
                   activeMode === "ai"
                     ? "gradient-accent text-primary-foreground shadow-md"
                     : "text-muted-foreground hover:text-foreground"
@@ -466,7 +466,7 @@ export default function ComposePage() {
               <button
                 type="button"
                 onClick={() => setActiveMode("template")}
-                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-all ${
+                className={`flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs sm:text-sm font-bold transition-all ${
                   activeMode === "template"
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -479,32 +479,32 @@ export default function ComposePage() {
           </div>
 
           {/* "To" Recipient Field */}
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label className="text-base font-bold">To (Recipients)</Label>
+              <Label className="text-sm font-bold">To (Recipients)</Label>
               {addressBook.length > 0 && (
                 <button
                   type="button"
                   onClick={selectAllAddressBook}
-                  className="flex items-center gap-1.5 text-sm text-slate-800 hover:underline font-bold"
+                  className="flex items-center gap-1.5 text-xs text-slate-800 hover:underline font-bold"
                 >
-                  <Users className="h-4 w-4" />
+                  <Users className="h-3.5 w-3.5" />
                   Select all ({addressBook.length})
                 </button>
               )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-input bg-secondary/30 p-2.5 min-h-[56px]">
+            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-input bg-secondary/30 p-2.5 min-h-[52px]">
               {chips.map((c) => {
                 const comp = getCompanyFromEmail(c);
                 return (
                   <span
                     key={c}
-                    className="inline-flex items-center gap-2 rounded-xl bg-primary/10 border border-primary/20 px-3 py-1.5 text-sm font-semibold text-foreground"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 border border-primary/20 px-2.5 py-1 text-xs sm:text-sm font-semibold text-foreground"
                   >
                     <span>{c}</span>
                     {comp && (
-                      <span className="rounded-lg bg-violet/20 text-slate-800 px-2 py-0.5 text-xs font-bold">
+                      <span className="rounded-lg bg-violet/20 text-slate-800 px-1.5 py-0.5 text-[11px] font-bold">
                         {comp}
                       </span>
                     )}
@@ -512,7 +512,7 @@ export default function ComposePage() {
                       type="button"
                       aria-label={`Remove ${c}`}
                       onClick={() => removeChip(c)}
-                      className="hover:text-destructive transition-colors ml-1"
+                      className="hover:text-destructive transition-colors ml-0.5"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
@@ -533,14 +533,14 @@ export default function ComposePage() {
                 }}
                 onBlur={() => draftInput && addChip(draftInput)}
                 placeholder={chips.length === 0 ? "Paste hr@tcs.com, recruiter@google.com..." : "Add more..."}
-                className="min-w-[200px] flex-1 bg-transparent px-2 py-1.5 text-base outline-none placeholder:text-muted-foreground"
+                className="min-w-[180px] flex-1 bg-transparent px-2 py-1 text-sm sm:text-base outline-none placeholder:text-muted-foreground"
               />
             </div>
 
             {detectedCompany && (
-              <div className="flex items-center gap-2 pt-1">
-                <span className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/50 px-4 py-1.5 text-sm font-semibold text-foreground">
-                  <Building2 className="h-4 w-4 text-slate-800" />
+              <div className="flex items-center gap-2 pt-0.5">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/50 px-3 py-1 text-xs font-semibold text-foreground">
+                  <Building2 className="h-3.5 w-3.5 text-slate-800" />
                   Target Company: <strong className="text-slate-800">{detectedCompany.company}</strong>
                 </span>
               </div>
@@ -548,9 +548,9 @@ export default function ComposePage() {
           </div>
 
           {/* Subject Line Field */}
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label className="text-base font-bold">Subject Line</Label>
+              <Label className="text-sm font-bold">Subject Line</Label>
               {generatedEmails.length > 1 && (
                 <span className="text-xs text-slate-800 font-semibold">
                   (Customized for: {generatedEmails[activePreviewIdx]?.company || "Selected recipient"})
@@ -558,33 +558,33 @@ export default function ComposePage() {
               )}
             </div>
             {generating ? (
-              <div className="shimmer h-12 rounded-2xl" />
+              <div className="shimmer h-11 rounded-2xl" />
             ) : (
               <Input
                 value={subject}
                 onChange={(e) => handleSubjectChange(e.target.value)}
                 placeholder="e.g. Aditya Gupta — SDE Internship Inquiry | TCS"
-                className="bg-secondary/20 h-12 text-base rounded-2xl font-semibold"
+                className="bg-secondary/20 h-11 text-sm sm:text-base rounded-2xl font-semibold"
               />
             )}
           </div>
 
           {/* Body Field */}
-          <div className="space-y-2.5">
-            <Label className="text-base font-bold">Email Message Body</Label>
+          <div className="space-y-2">
+            <Label className="text-sm font-bold">Email Message Body</Label>
             {generating ? (
-              <div className="space-y-3 py-4">
+              <div className="space-y-2.5 py-3">
                 {[0, 1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="shimmer h-5 rounded-lg" style={{ width: `${92 - i * 8}%` }} />
+                  <div key={i} className="shimmer h-4 rounded-lg" style={{ width: `${92 - i * 8}%` }} />
                 ))}
               </div>
             ) : (
               <Textarea
                 value={body}
                 onChange={(e) => handleBodyChange(e.target.value)}
-                rows={11}
+                rows={10}
                 placeholder="Write your email message..."
-                className="resize-none font-mono text-base leading-relaxed p-4 rounded-2xl"
+                className="resize-none font-mono text-sm leading-relaxed p-3.5 rounded-2xl"
               />
             )}
           </div>
@@ -603,19 +603,19 @@ export default function ComposePage() {
               if (f) handleFileUpload(f);
             }}
             onClick={() => fileInputRef.current?.click()}
-            className={`cursor-pointer rounded-2xl border-2 border-dashed p-5 text-center transition-all ${
+            className={`cursor-pointer rounded-2xl border-2 border-dashed p-4 text-center transition-all ${
               dragging
                 ? "border-primary bg-primary/10"
                 : "border-border hover:bg-secondary/40"
             }`}
           >
-            <Paperclip className="mx-auto mb-2 h-5 w-5 text-muted-foreground" />
+            <Paperclip className="mx-auto mb-1.5 h-4 w-4 text-muted-foreground" />
             {uploadingFile ? (
-              <span className="text-sm text-muted-foreground flex items-center justify-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" /> Uploading resume...
+              <span className="text-xs text-muted-foreground flex items-center justify-center gap-2">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Uploading resume...
               </span>
             ) : file ? (
-              <div className="flex items-center justify-center gap-2 text-sm font-bold text-foreground">
+              <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-bold text-foreground">
                 <span>📎 {file.name}</span>
                 <button
                   type="button"
@@ -629,7 +629,7 @@ export default function ComposePage() {
                 </button>
               </div>
             ) : (
-              <span className="text-sm text-muted-foreground font-medium">
+              <span className="text-xs sm:text-sm text-muted-foreground font-medium">
                 Drag &amp; drop your resume (PDF, max 5MB), or click to browse
               </span>
             )}
@@ -645,20 +645,189 @@ export default function ComposePage() {
             />
           </div>
 
-          {/* AI Settings Section (if AI Mode) — Placed just below body and attachment */}
+          {/* Send Speed Throttling Bar */}
+          <div className="space-y-3.5 rounded-3xl border border-border bg-secondary/30 p-4 sm:p-5">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs sm:text-sm font-bold flex items-center gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground" /> Send Speed &amp; Throttling
+              </Label>
+              <span className="text-xs font-semibold text-muted-foreground">
+                Est: {getEstimatedTime(chips.length)}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { id: "fast" as const, label: "Fast", desc: "15s gap", icon: Zap },
+                { id: "safe" as const, label: "Safe", desc: "30s gap", icon: Shield },
+                { id: "stealth" as const, label: "Stealth", desc: "60s gap", icon: Turtle },
+                { id: "custom" as const, label: "Custom", desc: `${customDelay}s`, icon: Clock },
+              ].map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setSendSpeed(s.id)}
+                  className={`flex flex-col items-center gap-0.5 rounded-2xl border p-2.5 text-xs transition-all ${
+                    sendSpeed === s.id
+                      ? "gradient-accent text-primary-foreground font-bold shadow-md border-transparent"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <s.icon className="h-3.5 w-3.5" />
+                  <span className="font-bold text-xs sm:text-sm">{s.label}</span>
+                  <span className="text-[10px] opacity-75">{s.desc}</span>
+                </button>
+              ))}
+            </div>
+
+            {sendSpeed === "custom" && (
+              <div className="flex items-center gap-3 pt-1">
+                <Input
+                  type="number"
+                  min={10}
+                  max={300}
+                  value={customDelay}
+                  onChange={(e) => setCustomDelay(Math.max(10, Math.min(300, Number(e.target.value))))}
+                  className="h-9 w-20 text-xs font-bold"
+                />
+                <span className="text-xs text-muted-foreground">seconds between each email (10-300)</span>
+              </div>
+            )}
+
+            {dailyLimits && (
+              <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-border/60 pt-2.5">
+                <span className="font-medium">Daily Safe Quota: {dailyLimits.sentToday}/{dailyLimits.safeLimit} used</span>
+                <span className="text-success font-bold">{dailyLimits.remaining} remaining</span>
+              </div>
+            )}
+          </div>
+
+          {/* Send Button */}
+          <Button
+            onClick={handleSend}
+            disabled={sending || chips.length === 0}
+            className="w-full gradient-accent text-primary-foreground shadow-[var(--shadow-glow)] hover:opacity-90 h-12 text-sm sm:text-base font-bold rounded-2xl"
+          >
+            {sending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <SendIcon className="mr-2 h-4 w-4" />
+            )}
+            {sending
+              ? "Sending Individual Emails via Gmail SMTP..."
+              : `Send Personalized Emails to ${chips.length} Recipient${chips.length !== 1 ? "s" : ""}`}
+          </Button>
+
+          {sendProgress && (
+            <div className="space-y-2 rounded-2xl border border-border bg-secondary/40 p-3.5 text-xs sm:text-sm">
+              <div className="flex justify-between font-bold">
+                <span className="text-foreground">{sendProgress.status}</span>
+                <span>{sendProgress.sent + sendProgress.failed}/{sendProgress.total}</span>
+              </div>
+              <Progress value={((sendProgress.sent + sendProgress.failed) / sendProgress.total) * 100} className="h-2 rounded-full" />
+            </div>
+          )}
+        </div>
+
+        {/* Right Column: Live Email Preview + AI Outreach Strategy (5 cols) */}
+        <div className="space-y-5 lg:col-span-5 h-fit lg:sticky lg:top-4">
+          {/* Live Email Preview Card */}
+          <div className="surface p-6 sm:p-7 space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-foreground">
+                  Live Email Preview
+                </p>
+                <p className="text-[11px] text-muted-foreground">What your recipient will see in Gmail</p>
+              </div>
+              {generatedEmails.length > 1 && (
+                <Badge variant="outline" className="border-violet/40 bg-violet/10 text-slate-800 font-bold text-xs">
+                  {activePreviewIdx + 1} of {generatedEmails.length} drafts
+                </Badge>
+              )}
+            </div>
+
+            {/* Carousel selector if multiple AI drafts */}
+            {generatedEmails.length > 1 && (
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Inspect &amp; Edit Recipient:</span>
+                <div className="flex gap-1.5 overflow-x-auto pb-1">
+                  {generatedEmails.map((em, idx) => (
+                    <button
+                      key={em.recipientId || idx}
+                      type="button"
+                      onClick={() => {
+                        setActivePreviewIdx(idx);
+                        setSubject(em.subject);
+                        setBody(em.body);
+                      }}
+                      className={`shrink-0 rounded-xl px-2.5 py-1 text-xs font-bold transition-all ${
+                        activePreviewIdx === idx
+                          ? "gradient-accent text-primary-foreground shadow-sm"
+                          : "border border-border bg-card text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {em.company || em.email.split("@")[0]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Rendered Email Card */}
+            <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 space-y-3.5 shadow-sm">
+              <div className="flex items-center justify-between border-b border-border pb-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="gradient-accent grid h-8 w-8 place-items-center rounded-xl text-xs font-black text-primary-foreground">
+                    {profile?.fullName ? profile.fullName.slice(0, 2).toUpperCase() : "RO"}
+                  </span>
+                  <div className="text-xs">
+                    <p className="font-bold text-foreground">{profile?.fullName || "You"} (via Gmail)</p>
+                    <p className="text-muted-foreground truncate max-w-[200px] sm:max-w-[240px] text-[11px] font-mono">
+                      To: {chips[activePreviewIdx] || chips[0] || "recipient@company.com"}
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] text-muted-foreground font-medium">Preview</span>
+              </div>
+
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Subject</p>
+                <h3 className="text-xs sm:text-sm font-bold text-foreground leading-snug mt-0.5">
+                  {subject || <span className="text-muted-foreground font-normal">Subject line will appear here</span>}
+                </h3>
+              </div>
+
+              <div className="border-t border-border/60 pt-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">Message</p>
+                <div className="whitespace-pre-wrap text-xs sm:text-sm leading-relaxed text-foreground max-h-72 overflow-y-auto font-sans">
+                  {body || "Your personalized email body will appear here as you type or generate with AI."}
+                </div>
+              </div>
+
+              {file && (
+                <div className="inline-flex items-center gap-2 rounded-xl border border-border bg-secondary/50 px-3 py-1.5 text-xs font-bold text-foreground shadow-sm">
+                  <Paperclip className="h-3.5 w-3.5 text-slate-800" />
+                  <span>Attachment: {file.name}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* AI Outreach Strategy Section (Right Side below Mail Preview) */}
           {activeMode === "ai" && (
-            <div className="space-y-5 rounded-3xl border border-slate-200 bg-slate-50/70 p-6 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-slate-800 flex items-center gap-2">
+            <div className="surface space-y-4 p-5 sm:p-6 shadow-sm">
+              <div className="flex items-center justify-between border-b border-border pb-3">
+                <span className="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-2">
                   <Sparkles className="h-4 w-4" /> AI Outreach Strategy
                 </span>
-                <span className="text-xs text-muted-foreground font-medium">Powered by Groq &amp; Gemini</span>
+                <span className="text-[11px] text-muted-foreground font-medium">Groq &amp; Gemini</span>
               </div>
 
               {/* Goal Pills */}
-              <div className="space-y-2">
-                <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Goal</Label>
-                <div className="flex flex-wrap gap-2">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Goal</Label>
+                <div className="flex flex-wrap gap-1.5">
                   {[
                     { id: "internship", label: "Internship" },
                     { id: "fulltime", label: "Full-Time" },
@@ -669,7 +838,7 @@ export default function ComposePage() {
                       key={item.id}
                       type="button"
                       onClick={() => setGoal(item.id)}
-                      className={`rounded-xl px-3.5 py-1.5 text-sm font-bold transition-all ${
+                      className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
                         goal === item.id
                           ? "gradient-accent text-primary-foreground shadow-sm"
                           : "border border-border bg-card text-muted-foreground hover:text-foreground"
@@ -682,9 +851,9 @@ export default function ComposePage() {
               </div>
 
               {/* Tone Pills */}
-              <div className="space-y-2">
-                <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tone</Label>
-                <div className="flex flex-wrap gap-2">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Tone</Label>
+                <div className="flex flex-wrap gap-1.5">
                   {[
                     { id: "confident and concise", label: "Confident & Concise" },
                     { id: "warm and enthusiastic", label: "Enthusiastic" },
@@ -694,7 +863,7 @@ export default function ComposePage() {
                       key={item.id}
                       type="button"
                       onClick={() => setTone(item.id)}
-                      className={`rounded-xl px-3.5 py-1.5 text-sm font-bold transition-all ${
+                      className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
                         tone === item.id
                           ? "gradient-accent text-primary-foreground shadow-sm"
                           : "border border-border bg-card text-muted-foreground hover:text-foreground"
@@ -706,184 +875,18 @@ export default function ComposePage() {
                 </div>
               </div>
 
-              <div className="pt-2">
+              <div className="pt-1">
                 <Button
                   onClick={handleGenerateAI}
                   disabled={generating || chips.length === 0}
-                  className="w-full gradient-accent text-primary-foreground shadow-lg hover:opacity-90 h-12 text-sm font-bold rounded-2xl"
+                  className="w-full gradient-accent text-primary-foreground shadow-lg hover:opacity-90 h-11 text-xs sm:text-sm font-bold rounded-2xl"
                 >
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  {generating ? "Crafting Tailored Subjects & Body with AI..." : `Generate Personalized Emails for ${chips.length} Recipient${chips.length !== 1 ? "s" : ""}`}
+                  <Sparkles className="mr-1.5 h-4 w-4" />
+                  {generating ? "Crafting with AI..." : `Generate Personalized Emails for ${chips.length} Recipient${chips.length !== 1 ? "s" : ""}`}
                 </Button>
               </div>
             </div>
           )}
-
-          {/* Send Speed Throttling Bar */}
-          <div className="space-y-4 rounded-3xl border border-border bg-secondary/30 p-5">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-bold flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground" /> Send Speed &amp; Throttling
-              </Label>
-              <span className="text-xs font-semibold text-muted-foreground">
-                Est: {getEstimatedTime(chips.length)}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-4 gap-2.5">
-              {[
-                { id: "fast" as const, label: "Fast", desc: "15s gap", icon: Zap },
-                { id: "safe" as const, label: "Safe", desc: "30s gap", icon: Shield },
-                { id: "stealth" as const, label: "Stealth", desc: "60s gap", icon: Turtle },
-                { id: "custom" as const, label: "Custom", desc: `${customDelay}s`, icon: Clock },
-              ].map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => setSendSpeed(s.id)}
-                  className={`flex flex-col items-center gap-1 rounded-2xl border p-3 text-xs transition-all ${
-                    sendSpeed === s.id
-                      ? "gradient-accent text-primary-foreground font-bold shadow-md border-transparent"
-                      : "border-border bg-card text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <s.icon className="h-4 w-4" />
-                  <span className="font-bold text-sm">{s.label}</span>
-                  <span className="text-[10px] opacity-75">{s.desc}</span>
-                </button>
-              ))}
-            </div>
-
-            {sendSpeed === "custom" && (
-              <div className="flex items-center gap-3 pt-2">
-                <Input
-                  type="number"
-                  min={10}
-                  max={300}
-                  value={customDelay}
-                  onChange={(e) => setCustomDelay(Math.max(10, Math.min(300, Number(e.target.value))))}
-                  className="h-10 w-24 text-sm font-bold"
-                />
-                <span className="text-sm text-muted-foreground">seconds between each email (10-300)</span>
-              </div>
-            )}
-
-            {dailyLimits && (
-              <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-border/60 pt-3">
-                <span className="font-medium">Daily Safe Quota: {dailyLimits.sentToday}/{dailyLimits.safeLimit} used</span>
-                <span className="text-success font-bold">{dailyLimits.remaining} remaining</span>
-              </div>
-            )}
-          </div>
-
-          {/* Send Button */}
-          <Button
-            onClick={handleSend}
-            disabled={sending || chips.length === 0}
-            className="w-full gradient-accent text-primary-foreground shadow-[var(--shadow-glow)] hover:opacity-90 h-13 text-base font-bold rounded-2xl"
-          >
-            {sending ? (
-              <Loader2 className="mr-2.5 h-5 w-5 animate-spin" />
-            ) : (
-              <SendIcon className="mr-2.5 h-5 w-5" />
-            )}
-            {sending
-              ? "Sending Individual Emails via Gmail SMTP..."
-              : `Send Personalized Emails to ${chips.length} Recipient${chips.length !== 1 ? "s" : ""}`}
-          </Button>
-
-          {sendProgress && (
-            <div className="space-y-2.5 rounded-2xl border border-border bg-secondary/40 p-4 text-sm">
-              <div className="flex justify-between font-bold">
-                <span className="text-foreground">{sendProgress.status}</span>
-                <span>{sendProgress.sent + sendProgress.failed}/{sendProgress.total}</span>
-              </div>
-              <Progress value={((sendProgress.sent + sendProgress.failed) / sendProgress.total) * 100} className="h-2.5 rounded-full" />
-            </div>
-          )}
-        </div>
-
-        {/* Right Column: Live Email Preview (5 cols) */}
-        <div className="surface p-8 lg:col-span-5 h-fit lg:sticky lg:top-6 space-y-5">
-          <div className="flex items-center justify-between border-b border-border pb-4">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-wider text-foreground">
-                Live Email Preview
-              </p>
-              <p className="text-xs text-muted-foreground">What your recipient will see in Gmail</p>
-            </div>
-            {generatedEmails.length > 1 && (
-              <Badge variant="outline" className="border-violet/40 bg-violet/10 text-slate-800 font-bold text-xs">
-                {activePreviewIdx + 1} of {generatedEmails.length} drafts
-              </Badge>
-            )}
-          </div>
-
-          {/* Carousel selector if multiple AI drafts */}
-          {generatedEmails.length > 1 && (
-            <div className="space-y-2">
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Inspect &amp; Edit Recipient:</span>
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {generatedEmails.map((em, idx) => (
-                  <button
-                    key={em.recipientId || idx}
-                    type="button"
-                    onClick={() => {
-                      setActivePreviewIdx(idx);
-                      setSubject(em.subject);
-                      setBody(em.body);
-                    }}
-                    className={`shrink-0 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
-                      activePreviewIdx === idx
-                        ? "gradient-accent text-primary-foreground shadow-sm"
-                        : "border border-border bg-card text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {em.company || em.email.split("@")[0]}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Rendered Email Card */}
-          <div className="rounded-3xl border border-border bg-card p-6 space-y-5 shadow-sm">
-            <div className="flex items-center justify-between border-b border-border pb-4">
-              <div className="flex items-center gap-3">
-                <span className="gradient-accent grid h-10 w-10 place-items-center rounded-2xl text-sm font-black text-primary-foreground">
-                  {profile?.fullName ? profile.fullName.slice(0, 2).toUpperCase() : "RO"}
-                </span>
-                <div className="text-sm">
-                  <p className="font-bold text-foreground">{profile?.fullName || "You"} (via Gmail)</p>
-                  <p className="text-muted-foreground truncate max-w-[240px] text-xs font-mono">
-                    To: {chips[activePreviewIdx] || chips[0] || "recipient@company.com"}
-                  </p>
-                </div>
-              </div>
-              <span className="text-xs text-muted-foreground font-medium">Preview</span>
-            </div>
-
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Subject</p>
-              <h3 className="text-base font-bold text-foreground leading-snug mt-1">
-                {subject || <span className="text-muted-foreground font-normal">Subject line will appear here</span>}
-              </h3>
-            </div>
-
-            <div className="border-t border-border/60 pt-4">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Message</p>
-              <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground max-h-96 overflow-y-auto font-sans">
-                {body || "Your personalized email body will appear here as you type or generate with AI."}
-              </div>
-            </div>
-
-            {file && (
-              <div className="inline-flex items-center gap-2.5 rounded-2xl border border-border bg-secondary/50 px-4 py-2.5 text-xs font-bold text-foreground shadow-sm">
-                <Paperclip className="h-4 w-4 text-slate-800" />
-                <span>Attachment: {file.name}</span>
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>

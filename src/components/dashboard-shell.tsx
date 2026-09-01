@@ -142,20 +142,20 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   return (
-    <div className="min-h-screen w-full p-2 sm:p-4 lg:p-6 flex flex-col">
-      <div className="flex w-full flex-1 gap-5">
+    <div className="min-h-screen w-full p-2 sm:p-3 lg:p-4 flex flex-col">
+      <div className="flex w-full flex-1 gap-4">
         {/* Desktop Rail Sidebar */}
-        <aside className="sticky top-6 hidden h-[calc(100vh-3rem)] shrink-0 lg:block">
+        <aside className="sticky top-4 hidden h-[calc(100vh-2rem)] shrink-0 lg:block">
           <Rail />
         </aside>
 
         {/* Full-width Canvas Container */}
-        <div className="canvas min-w-0 flex-1 rounded-2xl sm:rounded-[2rem] flex flex-col min-h-[calc(100vh-3rem)]">
-          <header className="flex items-center gap-3 px-6 pt-6 sm:px-10 sm:pt-8">
+        <div className="canvas min-w-0 flex-1 rounded-2xl sm:rounded-[2rem] flex flex-col min-h-[calc(100vh-2rem)]">
+          <header className="flex items-center gap-3 px-6 pt-3.5 sm:px-8 sm:pt-4">
             <button
               aria-label="Open menu"
               onClick={() => setOpen(true)}
-              className="grid h-11 w-11 place-items-center rounded-xl border border-border lg:hidden"
+              className="grid h-10 w-10 place-items-center rounded-xl border border-border lg:hidden"
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -164,7 +164,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               Reach<span className="gradient-text">Out</span>
             </span>
 
-            <div className="ml-auto flex items-center gap-3">
+            <div className="ml-auto flex items-center gap-2.5">
               {/* Theme Toggle (Light / Dark) */}
               <ThemeToggle />
 
@@ -176,7 +176,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             </div>
           </header>
 
-          <main key={pathname} className="animate-fade-up flex-1 px-6 pb-12 pt-8 sm:px-10">
+          <main key={pathname} className="animate-fade-up flex-1 px-6 pb-8 pt-2 sm:px-8 sm:pt-2">
             {children}
           </main>
         </div>
@@ -215,13 +215,13 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mb-5 flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 className="gradient-text text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl lg:text-[40px]">
+        <h1 className="gradient-text text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl lg:text-[34px]">
           {title}
         </h1>
         {description && (
-          <p className="mt-2 text-base text-muted-foreground sm:text-lg">
+          <p className="mt-1 text-sm text-muted-foreground sm:text-base">
             {description}
           </p>
         )}
