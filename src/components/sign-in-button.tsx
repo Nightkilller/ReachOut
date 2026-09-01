@@ -1,10 +1,14 @@
 "use client";
 
 import { useClerk } from "@clerk/nextjs";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { ArrowRight, Loader2, Mail } from "lucide-react";
 
-export function SignInButton() {
+interface SignInButtonProps {
+  variant?: "primary" | "nav";
+}
+
+export function SignInButton({ variant = "primary" }: SignInButtonProps) {
   const { redirectToSignIn } = useClerk();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -17,57 +21,47 @@ export function SignInButton() {
     }
   };
 
+  if (variant === "nav") {
+    return (
+      <button
+        onClick={handleSignIn}
+        disabled={isLoading}
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-700 transition-colors disabled:opacity-60"
+      >
+        {isLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <>
+            Sign In
+            <ArrowRight className="h-3.5 w-3.5" />
+          </>
+        )}
+      </button>
+    );
+  }
+
+  // Primary CTA button
   return (
-    <Button
+    <button
       onClick={handleSignIn}
       disabled={isLoading}
-      size="lg"
-      className="group relative overflow-hidden rounded-xl bg-white px-8 py-6 text-base font-semibold text-zinc-900 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] disabled:opacity-70"
+      className="group inline-flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-bold text-white shadow-lg transition-all duration-200 hover:scale-[1.03] hover:shadow-xl active:scale-[0.98] disabled:opacity-70"
+      style={{
+        background: "linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #0ea5e9 100%)",
+      }}
     >
-      {/* Animated gradient border */}
-      <span className="pointer-events-none absolute inset-0 rounded-xl border border-zinc-200/80 transition-colors group-hover:border-zinc-300" />
-
-      {/* Mail icon */}
-      <svg
-        className="mr-3 h-5 w-5"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <rect width="20" height="16" x="2" y="4" rx="2" />
-        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-      </svg>
-
       {isLoading ? (
-        <span className="flex items-center gap-2">
-          <svg
-            className="h-4 w-4 animate-spin"
-            viewBox="0 0 24 24"
-            fill="none"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-            />
-          </svg>
+        <>
+          <Loader2 className="h-5 w-5 animate-spin" />
           Connecting...
-        </span>
+        </>
       ) : (
-        "Get Started — Sign In"
+        <>
+          <Mail className="h-5 w-5" />
+          Get Started Free
+          <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+        </>
       )}
-    </Button>
+    </button>
   );
 }

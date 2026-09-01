@@ -8,25 +8,25 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ClerkProvider
       appearance={{
         variables: {
-          colorPrimary: "#0F172A",
-          colorBackground: "#18181b",
-          colorNeutral: "#e4e4e7",
+          colorPrimary: "#2563eb",
+          colorBackground: "#ffffff",
+          colorNeutral: "#1e293b",
         },
         elements: {
-          card: "bg-card border border-border shadow-2xl rounded-2xl",
-          headerTitle: "text-foreground font-bold",
-          headerSubtitle: "text-muted-foreground",
-          socialButtonsBlockButton: "bg-secondary border-border text-foreground hover:bg-secondary/80 rounded-xl",
-          formButtonPrimary: "bg-primary text-primary-foreground hover:opacity-90 rounded-xl font-bold",
-          formFieldInput: "bg-secondary/40 border-border text-foreground rounded-xl",
-          formFieldLabel: "text-foreground font-semibold",
+          card: "bg-white border border-slate-200 shadow-2xl rounded-2xl",
+          headerTitle: "text-slate-900 font-bold",
+          headerSubtitle: "text-slate-500",
+          socialButtonsBlockButton: "bg-slate-50 border-slate-200 text-slate-900 hover:bg-slate-100 rounded-xl",
+          formButtonPrimary: "bg-blue-600 hover:bg-blue-700 rounded-xl font-bold",
+          formFieldInput: "bg-white border-slate-200 text-slate-900 rounded-xl",
+          formFieldLabel: "text-slate-700 font-semibold",
         },
       }}
     >
       <ThemeProvider
         attribute="class"
-        defaultTheme="system"
-        enableSystem
+        defaultTheme="light"
+        enableSystem={false}
         disableTransitionOnChange={false}
       >
         {children}
