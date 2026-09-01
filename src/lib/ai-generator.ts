@@ -182,7 +182,7 @@ export async function generateBatchEmails(
   options: GenerateOptions = {}
 ): Promise<GeneratedEmailResult[]> {
   const results: GeneratedEmailResult[] = [];
-  const chunkSize = 5;
+  const chunkSize = 10;
 
   for (let i = 0; i < recipients.length; i += chunkSize) {
     const chunk = recipients.slice(i, i + chunkSize);

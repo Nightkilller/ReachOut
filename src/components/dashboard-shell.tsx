@@ -60,6 +60,7 @@ function Rail() {
             <div key={href} className="relative group">
               <Link
                 href={href}
+                prefetch={true}
                 aria-label={label}
                 className={cn(
                   "relative grid h-12 w-12 place-items-center rounded-2xl transition-all duration-200",
@@ -111,6 +112,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
     <div className="flex h-full flex-col gap-6 bg-sidebar p-6 text-sidebar-foreground">
       <Link
         href="/"
+        prefetch={true}
         onClick={onNavigate}
         className="flex items-center gap-3 hover:opacity-80 transition-opacity"
       >
@@ -125,6 +127,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
           <Link
             key={href}
             href={href}
+            prefetch={true}
             onClick={onNavigate}
             className={cn(
               "flex items-center gap-3.5 rounded-2xl px-4 py-3 text-base font-medium transition-colors",
@@ -180,6 +183,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             </button>
             <Link
               href="/"
+              prefetch={true}
               className="flex items-center gap-2.5 text-lg font-bold lg:hidden hover:opacity-80 transition-opacity"
             >
               <img src="/logo.svg" alt="ReachOut" className="h-7 w-7 rounded-lg" />
@@ -198,7 +202,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             </div>
           </header>
 
-          <main key={pathname} className="animate-fade-up flex-1 px-6 pb-8 pt-2 sm:px-8 sm:pt-2">
+          <main className="flex-1 px-6 pb-8 pt-2 sm:px-8 sm:pt-2">
             {children}
           </main>
         </div>

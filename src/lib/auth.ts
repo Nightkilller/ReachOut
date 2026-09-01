@@ -1,12 +1,25 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 
 /**
  * Get the database user for the currently authenticated Clerk user.
- * Creates the user record on first login (upsert pattern).
- * Returns null if not authenticated.
+ * Optimized: uses auth() JWT for zero-network-overhead fast lookup.
+ * Only calls Clerk currentUser() and upsert on the user's first login.
  */
 export async function getDbUser() {
+  const { userId } = await auth();
+  if (!userId) return null;
+
+  // Fast path: cached DB lookup by indexed clerkId (1 query, 0 external API calls)
+  const existing = await prisma.user.findUnique({
+    where: { clerkId: userId },
+  });
+
+  if (existing) {
+    return existing;
+  }
+
+  // Slow path (first visit only): fetch full profile & create user in DB
   const clerkUser = await currentUser();
   if (!clerkUser) return null;
 
