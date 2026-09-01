@@ -22,6 +22,7 @@ import {
   Filter,
   Sparkles,
   Inbox,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader, StatusBadge } from "@/components/dashboard-shell";
@@ -86,6 +87,7 @@ export default function CampaignsHistoryPage() {
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [retrying, setRetrying] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const fetchCampaigns = useCallback(async () => {
     try {
@@ -234,6 +236,30 @@ export default function CampaignsHistoryPage() {
       toast.error("Retry failed");
     } finally {
       setRetrying(null);
+    }
+  };
+
+  const handleDeleteCampaign = async (campaignId: string) => {
+    if (!confirm("Are you sure you want to delete this campaign and all its sent email records?")) {
+      return;
+    }
+    setDeletingId(campaignId);
+    try {
+      const res = await fetch(`/api/campaigns/${campaignId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        toast.success("Campaign deleted successfully");
+        setCampaigns((prev) => prev.filter((c) => c.id !== campaignId));
+        setSelectedEmailId(null);
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Failed to delete campaign");
+      }
+    } catch {
+      toast.error("Failed to delete campaign");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -601,6 +627,21 @@ export default function CampaignsHistoryPage() {
                         <Copy className="mr-1.5 h-4 w-4" />
                       )}
                       {copied ? "Copied!" : "Copy Email Body"}
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={deletingId === activeEmail.campaignId}
+                      onClick={() => handleDeleteCampaign(activeEmail.campaignId)}
+                      className="h-10 px-3.5 text-xs font-bold rounded-xl border-border text-destructive hover:bg-destructive/10 hover:border-destructive/30"
+                    >
+                      {deletingId === activeEmail.campaignId ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                      ) : (
+                        <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                      )}
+                      Delete Campaign
                     </Button>
                   </div>
 
