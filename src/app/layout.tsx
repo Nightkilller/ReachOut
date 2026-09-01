@@ -7,6 +7,14 @@ export const metadata: Metadata = {
   title: "ReachOut — Smart Outreach Tool",
   description:
     "Send AI-personalized outreach emails with your resume attached, individually to every person in your list. Powered by Gmail SMTP.",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/logo-icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({

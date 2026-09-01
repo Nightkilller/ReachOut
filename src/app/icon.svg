@@ -1,0 +1,32 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="tabLogoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="50%" stop-color="#0ea5e9" />
+      <stop offset="100%" stop-color="#6366f1" />
+    </linearGradient>
+  </defs>
+  <!-- Background rounded pill for crisp tab contrast -->
+  <rect width="120" height="120" rx="28" fill="#0f172a" />
+  <!-- Upper-left curved wing -->
+  <path
+    d="M25 64
+       C33 52, 42 41, 49 33
+       C61 33, 72 32, 82 26
+       C75 39, 65 48, 54 54
+       C44 59, 34 62, 25 64
+       Z"
+    fill="url(#tabLogoGrad)"
+  />
+  <!-- Right/lower curved wing -->
+  <path
+    d="M82 26
+       C78 39, 78 50, 80 61
+       C82 70, 86 78, 92 85
+       L73 104
+       C70 91, 69 79, 70 67
+       C71 56, 75 44, 82 26
+       Z"
+    fill="url(#tabLogoGrad)"
+  />
+</svg>

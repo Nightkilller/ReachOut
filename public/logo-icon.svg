@@ -1,8 +1,11 @@
-<svg
-  viewBox="0 0 120 120"
-  fill="none"
-  xmlns="http://www.w3.org/2000/svg"
->
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGrad" x1="10%" y1="10%" x2="90%" y2="90%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="50%" stop-color="#0ea5e9" />
+      <stop offset="100%" stop-color="#6366f1" />
+    </linearGradient>
+  </defs>
   <!-- Upper-left curved wing -->
   <path
     d="M15 58
@@ -11,9 +14,8 @@
        C74 29, 62 39, 49 46
        C38 52, 26 56, 15 58
        Z"
-    fill="currentColor"
+    fill="url(#logoGrad)"
   />
-
   <!-- Right/lower curved wing -->
   <path
     d="M82 14
@@ -23,6 +25,6 @@
        C69 91, 68 77, 69 63
        C70 50, 75 36, 82 14
        Z"
-    fill="currentColor"
+    fill="url(#logoGrad)"
   />
 </svg>
