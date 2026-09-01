@@ -124,40 +124,60 @@ export async function sendEmail(
 
   // Add attachment if provided
   if (options.attachmentPath) {
-    let resolvedPath = options.attachmentPath;
+    if (options.attachmentPath.startsWith("data:")) {
+      const commaIdx = options.attachmentPath.indexOf(",");
+      if (commaIdx !== -1) {
+        const meta = options.attachmentPath.slice(0, commaIdx);
+        const base64Data = options.attachmentPath.slice(commaIdx + 1);
+        const match = meta.match(/^data:([^;]+)/);
+        const contentType = match ? match[1] : "application/pdf";
+        const fileName = options.attachmentName || "resume.pdf";
+        mailOptions.attachments = [
+          {
+            filename: fileName,
+            content: Buffer.from(base64Data, "base64"),
+            contentType,
+          },
+        ];
+      }
+    } else {
+      let resolvedPath = options.attachmentPath;
 
-    if (!fs.existsSync(resolvedPath)) {
-      const cleanPath = options.attachmentPath.startsWith("/")
-        ? options.attachmentPath.slice(1)
-        : options.attachmentPath;
+      if (!fs.existsSync(resolvedPath)) {
+        const cleanPath = options.attachmentPath.startsWith("/")
+          ? options.attachmentPath.slice(1)
+          : options.attachmentPath;
 
-      const candidates = [
-        path.join(process.cwd(), options.attachmentPath),
-        path.join(process.cwd(), "public", cleanPath),
-        path.join(process.cwd(), cleanPath),
-      ];
+        const candidates = [
+          path.join(process.cwd(), options.attachmentPath),
+          path.join(process.cwd(), "public", cleanPath),
+          path.join(process.cwd(), cleanPath),
+          path.join("/tmp", cleanPath),
+          path.join("/tmp", "uploads", path.basename(options.attachmentPath)),
+        ];
 
-      for (const candidate of candidates) {
-        if (fs.existsSync(candidate)) {
-          resolvedPath = candidate;
-          break;
+        for (const candidate of candidates) {
+          if (fs.existsSync(candidate)) {
+            resolvedPath = candidate;
+            break;
+          }
         }
       }
-    }
 
-    if (fs.existsSync(resolvedPath)) {
-      const fileName =
-        options.attachmentName || path.basename(resolvedPath);
-      mailOptions.attachments = [
-        {
-          filename: fileName,
-          path: resolvedPath,
-        },
-      ];
-    } else {
-      console.warn(
-        `[SMTP] Attachment path not found on disk: "${options.attachmentPath}"`
-      );
+      if (fs.existsSync(resolvedPath)) {
+        const fileName =
+          options.attachmentName || path.basename(resolvedPath);
+        mailOptions.attachments = [
+          {
+            filename: fileName,
+            path: resolvedPath,
+          },
+        ];
+      } else {
+        console.warn(
+          `[SMTP] Attachment path not found on disk: "${options.attachmentPath}"`
+        );
+      }
     }
   }
 

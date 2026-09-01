@@ -196,26 +196,9 @@ export default function ComposePage() {
     toast.success(`Selected ${allEmails.length} recipients from address book`);
   };
 
-  // File upload handler
+  // File upload handler with server upload + browser fallback
   const handleFileUpload = async (uploaded: File) => {
-    const fileName = uploaded.name.toLowerCase();
-    const isAllowed =
-      fileName.endsWith(".pdf") ||
-      fileName.endsWith(".docx") ||
-      fileName.endsWith(".doc") ||
-      fileName.endsWith(".txt") ||
-      fileName.endsWith(".rtf") ||
-      uploaded.type === "application/pdf" ||
-      uploaded.type === "application/x-pdf" ||
-      uploaded.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-      uploaded.type === "application/msword" ||
-      uploaded.type.includes("pdf") ||
-      uploaded.type.includes("document");
-
-    if (!isAllowed) {
-      toast.error("Please upload a PDF or DOCX file");
-      return;
-    }
+    if (!uploaded) return;
 
     const MAX_SIZE = 10 * 1024 * 1024; // 10MB
     if (uploaded.size > MAX_SIZE) {
@@ -230,21 +213,37 @@ export default function ComposePage() {
     }
 
     setUploadingFile(true);
-    const formData = new FormData();
-    formData.append("file", uploaded);
+
+    const attachDirectly = (fileObj: File) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        setFile({ name: fileObj.name, path: base64 });
+        toast.success(`Attached resume: ${fileObj.name}`);
+      };
+      reader.onerror = () => {
+        toast.error("Failed to read file on device");
+      };
+      reader.readAsDataURL(fileObj);
+    };
 
     try {
+      const formData = new FormData();
+      formData.append("file", uploaded);
+
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       const data = await res.json().catch(() => null);
+
       if (res.ok && data?.path) {
         setFile({ name: data.name || uploaded.name, path: data.path });
         toast.success(`Attached resume: ${data.name || uploaded.name}`);
       } else {
-        toast.error(data?.error || `Upload failed (Status ${res.status})`);
+        // Fall back to client-side data URI conversion
+        attachDirectly(uploaded);
       }
     } catch (err) {
-      console.error("[Upload error]", err);
-      toast.error("Upload failed. Please check your network connection and try again.");
+      console.warn("[Upload] Network or server error, using client-side attachment:", err);
+      attachDirectly(uploaded);
     } finally {
       setUploadingFile(false);
     }

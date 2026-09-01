@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { getDbUser } from "@/lib/auth";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
@@ -6,47 +7,31 @@ import path from "path";
 // Allow up to 10MB file size
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 
-// Supported document extensions
-const ALLOWED_EXTENSIONS = new Set([".pdf", ".docx", ".doc", ".txt", ".rtf"]);
-
-// Supported MIME types (including variations across different operating systems/browsers)
-const ALLOWED_MIME_PATTERNS = [
-  "application/pdf",
-  "application/x-pdf",
-  "application/acrobat",
-  "applications/vnd.pdf",
-  "text/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "text/plain",
-  "application/rtf",
-  "application/octet-stream", // Some browsers/operating systems report this for PDFs and Word docs
-];
-
-function isAllowedFile(fileName: string, mimeType?: string | null): boolean {
-  const ext = path.extname(fileName || "").toLowerCase();
-  if (ALLOWED_EXTENSIONS.has(ext)) {
-    return true;
-  }
-  if (mimeType) {
-    const cleanMime = mimeType.toLowerCase();
-    if (ALLOWED_MIME_PATTERNS.some((p) => cleanMime.includes(p))) {
-      return true;
-    }
-  }
-  return false;
-}
-
 /**
- * POST /api/upload — handle resume (PDF/DOCX) attachment upload.
+ * POST /api/upload — handle resume (PDF/DOCX/Document) attachment upload.
  * Returns { success, path, name, fileName, size, url } of the uploaded file.
+ * Resilient to read-only serverless filesystems with automatic base64 fallback.
  */
 export async function POST(req: NextRequest) {
   try {
-    const user = await getDbUser();
-    if (!user) {
+    let authUserId: string | null = null;
+    try {
+      const authObj = await auth();
+      authUserId = authObj?.userId || null;
+    } catch {
+      // Ignore auth error, will check getDbUser
+    }
+
+    if (!authUserId) {
+      const user = await getDbUser().catch(() => null);
+      if (user) {
+        authUserId = user.clerkId || user.id;
+      }
+    }
+
+    if (!authUserId) {
       return NextResponse.json(
-        { error: "Unauthorized. Please sign in to upload attachments." },
+        { error: "Unauthorized. Please sign in to attach files." },
         { status: 401 }
       );
     }
@@ -57,7 +42,7 @@ export async function POST(req: NextRequest) {
     } catch (formErr) {
       console.error("[POST /api/upload] Error parsing formData:", formErr);
       return NextResponse.json(
-        { error: "Failed to read uploaded file payload. Please try again." },
+        { error: "Failed to read uploaded file. Please try again." },
         { status: 400 }
       );
     }
@@ -67,16 +52,6 @@ export async function POST(req: NextRequest) {
     if (!file || typeof file === "string" || !file.name) {
       return NextResponse.json(
         { error: "No valid file was provided in the request." },
-        { status: 400 }
-      );
-    }
-
-    // Validate file type
-    if (!isAllowedFile(file.name, file.type)) {
-      return NextResponse.json(
-        {
-          error: `Invalid file type for "${file.name}". Please upload a PDF or document file (.pdf, .docx, .doc).`,
-        },
         { status: 400 }
       );
     }
@@ -99,37 +74,56 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Ensure upload directory exists
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadDir, { recursive: true });
+    // Convert to buffer & base64 data URI
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const mimeType = file.type || "application/pdf";
+    const base64DataUri = `data:${mimeType};base64,${buffer.toString("base64")}`;
 
-    // Generate clean, safe unique filename
+    // Clean safe unique filename
     const originalExt = path.extname(file.name) || ".pdf";
     const cleanExt = originalExt.toLowerCase();
     const rawBase = path.basename(file.name, originalExt);
     const safeBase =
       rawBase.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 40) || "resume";
-    const userPrefix = (user.id || "user").replace(/[^a-zA-Z0-9]/g, "").slice(0, 10);
+    const userPrefix = authUserId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 10);
     const fileName = `${safeBase}_${userPrefix}_${Date.now()}${cleanExt}`;
-    const filePath = path.join(uploadDir, fileName);
 
-    // Write file to disk
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    await writeFile(filePath, buffer);
+    let savedPath = base64DataUri;
+
+    // Try writing to public/uploads or /tmp
+    try {
+      const uploadDir = path.join(process.cwd(), "public", "uploads");
+      await mkdir(uploadDir, { recursive: true });
+      const diskPath = path.join(uploadDir, fileName);
+      await writeFile(diskPath, buffer);
+      savedPath = diskPath;
+    } catch {
+      try {
+        const tmpDir = path.join("/tmp", "uploads");
+        await mkdir(tmpDir, { recursive: true });
+        const tmpPath = path.join(tmpDir, fileName);
+        await writeFile(tmpPath, buffer);
+        savedPath = tmpPath;
+      } catch {
+        // In serverless read-only filesystems, use the base64 Data URI
+        savedPath = base64DataUri;
+      }
+    }
 
     return NextResponse.json({
       success: true,
-      path: filePath,
+      path: savedPath,
       name: file.name,
       fileName,
       size: file.size,
-      type: file.type || "application/pdf",
+      type: mimeType,
       url: `/uploads/${fileName}`,
     });
   } catch (error) {
     console.error("[POST /api/upload] Unexpected error:", error);
-    const message = error instanceof Error ? error.message : "Internal server error";
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
       { error: `Upload failed: ${message}` },
       { status: 500 }
