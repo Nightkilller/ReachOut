@@ -40,47 +40,59 @@ function Rail() {
   return (
     <div className="flex h-full w-[84px] flex-col items-center gap-3 rounded-[2rem] bg-sidebar/95 py-6 text-sidebar-foreground shadow-[0_20px_50px_-20px_oklch(0.2_0.02_265/45%)] backdrop-blur-xl">
       {/* ReachOut Logo icon — links to front home page */}
-      <Link
-        href="/"
-        className="mb-5 grid h-12 w-12 place-items-center transition-transform hover:scale-105"
-        title="ReachOut Home"
-      >
-        <img src="/logo.svg" alt="ReachOut" className="h-10 w-10 object-contain" />
-      </Link>
+      <div className="relative group mb-5">
+        <Link
+          href="/"
+          className="grid h-12 w-12 place-items-center transition-transform hover:scale-105"
+          aria-label="ReachOut Home"
+        >
+          <img src="/logo.svg" alt="ReachOut" className="h-10 w-10 object-contain" />
+        </Link>
+        <span className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-xl bg-slate-900/95 dark:bg-slate-800 px-3 py-1.5 text-xs font-bold text-white shadow-2xl opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0 -translate-x-2 z-50 border border-slate-700/60 backdrop-blur-md">
+          Home Page
+        </span>
+      </div>
 
       <nav className="flex flex-1 flex-col items-center gap-3">
         {NAV.map(({ href, label, icon: Icon }) => {
           const active = isActive(href);
           return (
-            <Link
-              key={href}
-              href={href}
-              title={label}
-              aria-label={label}
-              className={cn(
-                "relative grid h-12 w-12 place-items-center rounded-2xl transition-all duration-200",
-                active
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_0_1px_0_0_oklch(1_0_0/12%),0_0_24px_-4px_oklch(0.62_0.176_254/45%)]"
-                  : "text-sidebar-foreground/55 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
-              )}
-            >
-              {active && (
-                <span className="absolute -left-[18px] h-7 w-[4px] rounded-full bg-sidebar-primary" />
-              )}
-              <Icon className="h-5 w-5" />
-            </Link>
+            <div key={href} className="relative group">
+              <Link
+                href={href}
+                aria-label={label}
+                className={cn(
+                  "relative grid h-12 w-12 place-items-center rounded-2xl transition-all duration-200",
+                  active
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_0_1px_0_0_oklch(1_0_0/12%),0_0_24px_-4px_oklch(0.62_0.176_254/45%)]"
+                    : "text-sidebar-foreground/55 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+                )}
+              >
+                {active && (
+                  <span className="absolute -left-[18px] h-7 w-[4px] rounded-full bg-sidebar-primary" />
+                )}
+                <Icon className="h-5 w-5" />
+              </Link>
+              <span className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-xl bg-slate-900/95 dark:bg-slate-800 px-3 py-1.5 text-xs font-bold text-white shadow-2xl opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0 -translate-x-2 z-50 border border-slate-700/60 backdrop-blur-md">
+                {label}
+              </span>
+            </div>
           );
         })}
       </nav>
 
-      <button
-        aria-label="Sign out"
-        title="Sign out"
-        onClick={() => signOut({ redirectUrl: "/" })}
-        className="grid h-12 w-12 place-items-center rounded-2xl text-sidebar-foreground/55 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
-      >
-        <LogOut className="h-5 w-5" />
-      </button>
+      <div className="relative group">
+        <button
+          aria-label="Sign out"
+          onClick={() => signOut({ redirectUrl: "/" })}
+          className="grid h-12 w-12 place-items-center rounded-2xl text-sidebar-foreground/55 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+        >
+          <LogOut className="h-5 w-5" />
+        </button>
+        <span className="pointer-events-none absolute left-[calc(100%+16px)] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-xl bg-slate-900/95 dark:bg-slate-800 px-3 py-1.5 text-xs font-bold text-white shadow-2xl opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0 -translate-x-2 z-50 border border-slate-700/60 backdrop-blur-md">
+          Sign Out
+        </span>
+      </div>
     </div>
   );
 }
