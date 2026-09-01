@@ -33,9 +33,12 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # Dummy values for build — real ones are in Vercel env vars
-          GOOGLE_CLIENT_ID: dummy
-          GOOGLE_CLIENT_SECRET: dummy
-          AUTH_SECRET: dummy-secret-at-least-32-chars-long-for-build
+          # Dummy values for build — real secrets are set in hosting env vars
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_dummy
+          CLERK_SECRET_KEY: sk_test_dummy
+          NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
+          NEXT_PUBLIC_CLERK_SIGN_UP_URL: /sign-up
           DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
-          ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000000
+          ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+          GROQ_API_KEY: dummy
+          GEMINI_API_KEY: dummy
