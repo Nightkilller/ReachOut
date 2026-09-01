@@ -3,6 +3,14 @@
   <h1>ReachOut</h1>
   <p><strong>Smart, AI-Powered Personal Outreach Platform</strong></p>
   <p>Send hyper-personalized cold outreach emails tailored per company domain — straight from your Gmail with your resume attached.</p>
+
+  <p>
+    <a href="https://reach-out-tgc5.vercel.app/" target="_blank">
+      <img src="https://img.shields.io/badge/Live%20Demo-reach--out--tgc5.vercel.app-2563eb?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo" />
+    </a>
+  </p>
+
+  <p>🔗 <strong>Live App:</strong> <a href="https://reach-out-tgc5.vercel.app/">https://reach-out-tgc5.vercel.app/</a></p>
 </div>
 
 ---
