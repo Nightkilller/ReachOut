@@ -9,6 +9,34 @@ import { prisma } from "@/lib/prisma";
 import { decrypt } from "@/lib/encryption";
 import fs from "fs";
 import path from "path";
+import dns from "dns";
+
+// Force IPv4 lookup by default to prevent ENETUNREACH on IPv6-unrouted networks
+try {
+  dns.setDefaultResultOrder?.("ipv4first");
+} catch {
+  // Ignore in older Node environments
+}
+
+/**
+ * Custom DNS lookup that forces IPv4 (family: 4) resolution.
+ * Fixes ENETUNREACH errors when Node attempts to connect to Gmail's IPv6 address.
+ */
+function ipv4Lookup(
+  hostname: string,
+  options: any,
+  callback: (
+    err: NodeJS.ErrnoException | null,
+    address: string,
+    family: number
+  ) => void
+) {
+  if (typeof options === "function") {
+    callback = options;
+    return dns.lookup(hostname, { family: 4 }, callback);
+  }
+  return dns.lookup(hostname, { ...options, family: 4 }, callback);
+}
 
 /**
  * Get an authenticated Nodemailer transport for a given user.
@@ -40,9 +68,11 @@ export async function getMailTransport(userId: string) {
       user: user.smtpEmail.trim(),
       pass: decryptedPassword,
     },
+    lookup: ipv4Lookup,
     connectionTimeout: 15000,
     greetingTimeout: 15000,
-  });
+    socketTimeout: 15000,
+  } as any);
 }
 
 /**
@@ -121,9 +151,11 @@ export async function testSmtpConnection(
         user: cleanEmail,
         pass: cleanPassword,
       },
+      lookup: ipv4Lookup,
       connectionTimeout: 15000,
       greetingTimeout: 15000,
-    });
+      socketTimeout: 15000,
+    } as any);
 
     await transporter.verify();
     return { success: true };
