@@ -198,12 +198,34 @@ export default function ComposePage() {
 
   // File upload handler
   const handleFileUpload = async (uploaded: File) => {
-    if (uploaded.type !== "application/pdf") {
-      toast.error("Only PDF files are allowed");
+    const fileName = uploaded.name.toLowerCase();
+    const isAllowed =
+      fileName.endsWith(".pdf") ||
+      fileName.endsWith(".docx") ||
+      fileName.endsWith(".doc") ||
+      fileName.endsWith(".txt") ||
+      fileName.endsWith(".rtf") ||
+      uploaded.type === "application/pdf" ||
+      uploaded.type === "application/x-pdf" ||
+      uploaded.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      uploaded.type === "application/msword" ||
+      uploaded.type.includes("pdf") ||
+      uploaded.type.includes("document");
+
+    if (!isAllowed) {
+      toast.error("Please upload a PDF or DOCX file");
       return;
     }
-    if (uploaded.size > 5 * 1024 * 1024) {
-      toast.error("File size must be under 5MB");
+
+    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+    if (uploaded.size > MAX_SIZE) {
+      const sizeMb = (uploaded.size / (1024 * 1024)).toFixed(1);
+      toast.error(`File is too large (${sizeMb}MB). Maximum allowed size is 10MB.`);
+      return;
+    }
+
+    if (uploaded.size === 0) {
+      toast.error("The selected file is empty (0 bytes)");
       return;
     }
 
@@ -213,15 +235,16 @@ export default function ComposePage() {
 
     try {
       const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const data = await res.json();
-      if (res.ok) {
-        setFile({ name: data.name, path: data.path });
-        toast.success(`Attached resume: ${data.name}`);
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.path) {
+        setFile({ name: data.name || uploaded.name, path: data.path });
+        toast.success(`Attached resume: ${data.name || uploaded.name}`);
       } else {
-        toast.error(data.error || "Upload failed");
+        toast.error(data?.error || `Upload failed (Status ${res.status})`);
       }
-    } catch {
-      toast.error("Upload failed");
+    } catch (err) {
+      console.error("[Upload error]", err);
+      toast.error("Upload failed. Please check your network connection and try again.");
     } finally {
       setUploadingFile(false);
     }
@@ -645,15 +668,26 @@ export default function ComposePage() {
             )}
           </div>
 
-          {/* Resume PDF Attachment Dropzone */}
+          {/* Resume PDF / Document Attachment Dropzone */}
           <div
             onDragOver={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               setDragging(true);
             }}
-            onDragLeave={() => setDragging(false)}
+            onDragEnter={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setDragging(true);
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setDragging(false);
+            }}
             onDrop={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               setDragging(false);
               const f = e.dataTransfer.files?.[0];
               if (f) handleFileUpload(f);
@@ -661,42 +695,48 @@ export default function ComposePage() {
             onClick={() => fileInputRef.current?.click()}
             className={`cursor-pointer rounded-2xl border-2 border-dashed p-4 text-center transition-all ${
               dragging
-                ? "border-primary bg-primary/10"
+                ? "border-primary bg-primary/10 scale-[1.01]"
                 : "border-border hover:bg-secondary/40"
             }`}
           >
             <Paperclip className="mx-auto mb-1.5 h-4 w-4 text-muted-foreground" />
             {uploadingFile ? (
               <span className="text-xs text-muted-foreground flex items-center justify-center gap-2">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Uploading resume...
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" /> Uploading attachment...
               </span>
             ) : file ? (
               <div className="flex items-center justify-center gap-2 text-xs sm:text-sm font-bold text-foreground">
-                <span>📎 {file.name}</span>
+                <span className="truncate max-w-[280px]">📎 {file.name}</span>
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     setFile(null);
                   }}
-                  className="text-destructive hover:underline ml-2 text-xs"
+                  className="text-destructive hover:underline ml-2 text-xs font-semibold px-2 py-0.5 rounded-lg bg-destructive/10 hover:bg-destructive/20 transition-colors"
                 >
                   Remove
                 </button>
               </div>
             ) : (
-              <span className="text-xs sm:text-sm text-muted-foreground font-medium">
-                Drag &amp; drop your resume (PDF, max 5MB), or click to browse
-              </span>
+              <div className="space-y-0.5">
+                <span className="text-xs sm:text-sm text-muted-foreground font-medium block">
+                  Drag &amp; drop your resume (PDF or DOCX, max 10MB), or click to browse
+                </span>
+                <span className="text-[11px] text-muted-foreground/70 block">
+                  Supports PDF, DOCX, DOC files
+                </span>
+              </div>
             )}
             <input
               ref={fileInputRef}
               type="file"
-              accept=".pdf"
+              accept=".pdf,.docx,.doc,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               className="hidden"
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (f) handleFileUpload(f);
+                e.target.value = ""; // Crucial: Reset so re-uploading the same file works
               }}
             />
           </div>

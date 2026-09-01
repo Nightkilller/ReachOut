@@ -127,25 +127,30 @@ export default function RecipientsPage() {
   };
 
   const handleFileUpload = async (file: File) => {
-    const text = await file.text();
-    toast.info(`Importing ${file.name}...`);
-
     try {
+      const text = await file.text();
+      if (!text.trim()) {
+        toast.error("The selected CSV file is empty");
+        return;
+      }
+      toast.info(`Importing ${file.name}...`);
+
       const res = await fetch("/api/recipients", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ csv: text }),
       });
 
-      const data = await res.json();
-      if (res.ok) {
+      const data = await res.json().catch(() => null);
+      if (res.ok && data) {
         toast.success(`Imported ${data.added} recipient(s) from ${file.name}`);
         fetchRecipients();
       } else {
-        toast.error(data.error || "Failed to import CSV");
+        toast.error(data?.error || `Failed to import CSV (Status ${res.status})`);
       }
-    } catch {
-      toast.error("Failed to import CSV");
+    } catch (err) {
+      console.error("[CSV Import error]", err);
+      toast.error("Failed to import CSV. Please check the file format.");
     }
   };
 
@@ -237,11 +242,12 @@ export default function RecipientsPage() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".csv"
+            accept=".csv,text/csv,text/plain"
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0];
               if (f) handleFileUpload(f);
+              e.target.value = "";
             }}
           />
 

@@ -124,9 +124,26 @@ export async function sendEmail(
 
   // Add attachment if provided
   if (options.attachmentPath) {
-    const resolvedPath = path.isAbsolute(options.attachmentPath)
-      ? options.attachmentPath
-      : path.join(process.cwd(), options.attachmentPath);
+    let resolvedPath = options.attachmentPath;
+
+    if (!fs.existsSync(resolvedPath)) {
+      const cleanPath = options.attachmentPath.startsWith("/")
+        ? options.attachmentPath.slice(1)
+        : options.attachmentPath;
+
+      const candidates = [
+        path.join(process.cwd(), options.attachmentPath),
+        path.join(process.cwd(), "public", cleanPath),
+        path.join(process.cwd(), cleanPath),
+      ];
+
+      for (const candidate of candidates) {
+        if (fs.existsSync(candidate)) {
+          resolvedPath = candidate;
+          break;
+        }
+      }
+    }
 
     if (fs.existsSync(resolvedPath)) {
       const fileName =
@@ -137,6 +154,10 @@ export async function sendEmail(
           path: resolvedPath,
         },
       ];
+    } else {
+      console.warn(
+        `[SMTP] Attachment path not found on disk: "${options.attachmentPath}"`
+      );
     }
   }
 
