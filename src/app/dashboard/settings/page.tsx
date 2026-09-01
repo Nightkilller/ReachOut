@@ -6,7 +6,6 @@ import {
   Mail,
   ShieldCheck,
   Sparkles,
-  Key,
   Eye,
   EyeOff,
   Loader2,
@@ -418,20 +417,6 @@ export default function SettingsPage() {
                 className="h-12 text-base rounded-2xl"
               />
             </div>
-          </div>
-        </Section>
-
-        {/* AI Configuration Info */}
-        <Section
-          title="AI Generation Engine"
-          description="AI generation is powered by Groq (LLaMA 3.3 70B / 120B) or Google Gemini."
-          icon={<Key className="h-5 w-5" />}
-        >
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-foreground space-y-2">
-            <p className="font-bold text-slate-800">🔑 API Keys Configuration:</p>
-            <p className="text-muted-foreground leading-relaxed">
-              Ensure <code className="rounded-lg bg-secondary px-2 py-0.5 text-slate-800 font-bold">GROQ_API_KEY</code> or <code className="rounded-lg bg-secondary px-2 py-0.5 text-slate-800 font-bold">GEMINI_API_KEY</code> is configured in your <code className="rounded-lg bg-secondary px-2 py-0.5 font-mono">.env</code> file.
-            </p>
           </div>
         </Section>
       </div>
